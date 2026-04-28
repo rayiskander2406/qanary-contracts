@@ -188,11 +188,13 @@ The paper is in preparation. Until it lands on arXiv, cite the repository:
 
 ## License
 
-License: TBD (pending). Until a `LICENSE` file is added to the repository,
-this work is preserved under default copyright; see the repository owner
-(Ray Iskander, Verdict Security) for permissions. The intended license is
-expected to be permissive (MIT or Apache-2.0) consistent with prior QANARY
-artifacts; the specific choice is in progress.
+[MIT License](LICENSE). Copyright © 2026 Ray Iskander.
+
+Locked in 2026-04-28. The repository is private until the public-ready
+checklist in an internal handoff document Block 10 is met (completeness
+proved + ≥1 protocol instantiation + F1 + F5 + F6 + F7 done), after which it
+will be made public simultaneously with the arXiv submission — same release
+pattern as the QANARY hardware program.
 
 ## Related work
 
