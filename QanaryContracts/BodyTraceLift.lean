@@ -362,8 +362,14 @@ theorem ozGuardDiscipline_implies_RTO
     ReachableTraceOf C s₀ tr := by
   obtain ⟨h_valid, h_init, h_dispatch⟩ := h_exec
   refine ⟨h_init, h_valid, ?_, ?_, ?_⟩
-  · -- Conjunct 3 (TraceEntryRevert): substantive (Phase B).
-    sorry
+  · -- Conjunct 3 (TraceEntryRevert): direct from L2 (executes_C_guard_unlocked_at_entry).
+    intro k caller value h_call
+    have hk_lt : k.val < tr.length := k.isLt
+    have h_exec' : executes_C C s₀ tr := ⟨h_valid, h_init, h_dispatch⟩
+    have h_unlocked := executes_C_guard_unlocked_at_entry C h_oz h_distinct s₀ tr h_exec'
+      k.val hk_lt caller value h_call
+    rw [h_unlocked]
+    exact h_distinct.symm
   · -- Conjunct 4 (TraceCCallLocked): substantive (Phase B).
     sorry
   · -- Conjunct 5 (TraceCFrameStartsWithLock): direct from MatchesBody.
