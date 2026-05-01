@@ -56,6 +56,7 @@ import QanaryContracts.Reachability
 import QanaryContracts.OZSoundness
 import QanaryContracts.Executes
 import QanaryContracts.Executes.CountHelpers
+import QanaryContracts.Executes.StackHistory
 
 namespace QanaryContracts
 
