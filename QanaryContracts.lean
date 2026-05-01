@@ -21,5 +21,7 @@ import QanaryContracts.CEISufficiency
 import QanaryContracts.Reachability
 import QanaryContracts.CEISufficiencyV2
 import QanaryContracts.OZSoundness
+import QanaryContracts.Executes
+import QanaryContracts.BodyTraceLift
 import QanaryContracts.Tests
 import QanaryContracts.Spikes

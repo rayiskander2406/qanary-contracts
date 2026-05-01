@@ -156,3 +156,16 @@ theorem audit_guard_protected_blocks_state_aware :
 #print axioms QanaryContracts.oz_invariant_holds
 #print axioms QanaryContracts.guard_locked_during_call
 #print axioms QanaryContracts.oz_guard_prevents_reentrancy
+
+-- Phase 5 Session 2 (2026-04-28) — Theorem 5* (`reentrancy_free_universal`).
+-- Path α / Step 0 / γ′: drops the unused OZGuardDiscipline hypothesis from
+-- Theorem 5; audit baseline must show the same kernel-axiom profile as
+-- Theorem 5 itself (Theorem 5 now delegates to this).
+#print axioms QanaryContracts.reentrancy_free_universal
+
+-- Phase 5 Session 4 (2026-04-28) — W4 wall.
+-- Q-VRVP2-1 strengthening of IsOZGuardedFunction with
+-- NoSStoreOnGuardSlotInSteps on pre/post; the adversarial body that
+-- satisfied the Phase-4-Session-6 definition fails the strengthened
+-- version. Caught by VRVP-2 before BodyTraceLift.lean code was written.
+#print axioms QanaryContracts.adversarial_body_fails_strengthened_oz
