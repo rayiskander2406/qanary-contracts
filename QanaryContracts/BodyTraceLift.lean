@@ -317,6 +317,120 @@ theorem executes_C_guard_unlocked_at_entry
     simp [List.take_zero]
     exact h_init
 
+/-! ## Phase 5 Session 9 — L3: `executes_C_guard_locked_during_body_call`
+
+The argument: at every C-issued CALL inside a C-frame's body, the
+guard slot is locked. Composes BodyShape's `c_call_in_C_frame_eq_p_call`
+(any C-issued CALL inside the frame is at `p_call`) with
+slot-stability + `lock_position_unique` and `unlock_position_unique`
+ruling out other guard SSTOREs in `[q+2, p_call)`.
+
+Note the strict hypothesis `currentFrameAt tr k = some C.address`:
+this matches the body-call use case. The looser variant where
+`currentFrameAt tr k = none` while `caller = C.address` (the
+"phantom CALL" gap in `CallsFromTopFrame`) is outside this lemma's
+scope — see Conjunct 4 closure for the case split. -/
+
+/-- **L3 (Phase 5 Session 9, Layer 4 conjunct 4 helper).** Under
+    `executes_C C s₀ tr` and `OZGuardDiscipline C` with distinct
+    lock/unlock values, the guard slot of `C` reads `C.lockedValue`
+    at every CALL with `caller = C.address` AND
+    `currentFrameAt tr k = some C.address` (i.e., `C` is genuinely
+    executing at position `k`). -/
+theorem executes_C_guard_locked_during_body_call
+    (C : Contract) (h_oz : OZGuardDiscipline C)
+    (h_distinct : C.lockedValue ≠ C.unlockedValue)
+    (s₀ : EVMState) (tr : ExecutionTrace)
+    (h_exec : executes_C C s₀ tr)
+    (k : Nat) (hk : k < tr.length)
+    (callee : Address) (value : Word256)
+    (h_call : tr[k]? = some (EVMStep.call C.address callee value))
+    (h_cf_k : currentFrameAt tr k = some C.address) :
+    guardSlotAt s₀ tr k C.address C.guardSlot = C.lockedValue := by
+  have h_valid : ValidExecution tr := h_exec.1
+  have h_dispatch : ∀ (k : Nat) (caller : Address) (value : Word256),
+      k < tr.length → tr[k]? = some (EVMStep.call caller C.address value) →
+      ∃ (f : FunctionBody) (finish : Nat),
+        f ∈ C.functions ∧ MatchesBody C f tr k finish := h_exec.2.2
+  have h_so : SStoresInOwnFrame tr := h_valid.1
+  -- C is executing at k, so by c_frame_open_implies_entry there's an entry q < k.
+  have hk_le : k ≤ tr.length := le_of_lt hk
+  obtain ⟨q, caller_q, value_q, hq_lt_k, h_call_q, h_nest_q⟩ :=
+    c_frame_open_implies_entry C s₀ tr h_exec k hk_le h_cf_k
+  have hq_lt_tr : q < tr.length := lt_trans hq_lt_k hk
+  obtain ⟨f, finish, hf_mem, h_match⟩ := h_dispatch q caller_q value_q hq_lt_tr h_call_q
+  have h_oz_all : ∀ f ∈ C.functions, IsOZGuardedFunction C f := h_oz.2
+  have h_isOZ : IsOZGuardedFunction C f := h_oz_all f hf_mem
+  have h_q_lt_f : q < finish := h_match.1
+  have h_finish_le_tr : finish ≤ tr.length := h_match.2.1
+  have h_dep_eq : frameDepthAt tr q = frameDepthAt tr finish := h_match.2.2.2.1
+  -- k < finish (else NestedAfter at d = finish - q - 1 contradicts depth balance).
+  have hk_lt_finish : k < finish := by
+    by_contra h_ge
+    push_neg at h_ge
+    have h_d : finish - q - 1 < k - q := by omega
+    have h_n := h_nest_q ⟨finish - q - 1, h_d⟩
+    have h_pos : q + 1 + (finish - q - 1) = finish := by omega
+    rw [h_pos] at h_n
+    omega
+  have hq1_le_k : q + 1 ≤ k := by omega
+  -- Use c_call_in_C_frame_eq_p_call (BodyShape) to get k = p_call, plus all the
+  -- positional information about p_call and p_unlock.
+  obtain ⟨pcall, punlock, h_k_eq_pc, h_q1_lt_pc, h_pc_lt_pu, h_pu_lt_f,
+          h_cf_q1, h_cf_pu, h_tr_q1, h_tr_pu⟩ :=
+    c_call_in_C_frame_eq_p_call C tr q finish caller_q value_q h_call_q f h_isOZ h_match
+      k hq1_le_k hk_lt_finish h_cf_k callee value h_call
+  -- Slot at q + 2 = lockedValue (after lock SSTORE at q + 1).
+  have hq1_lt_tr : q + 1 < tr.length := by omega
+  have h_slot_q2 : guardSlotAt s₀ tr (q + 2) C.address C.guardSlot = C.lockedValue := by
+    unfold guardSlotAt slotAt stateAt evalState
+    have h_take : tr.take (q + 2) = tr.take (q + 1) ++ [tr[q + 1]'hq1_lt_tr] := by
+      rw [show q + 2 = (q + 1) + 1 from rfl, List.take_add_one,
+          List.getElem?_eq_getElem hq1_lt_tr]
+      rfl
+    rw [h_take, List.foldl_append]
+    simp only [List.foldl_cons, List.foldl_nil]
+    have h_step_eq : tr[q + 1]'hq1_lt_tr =
+        EVMStep.sstore C.address C.guardSlot C.lockedValue := by
+      have := h_tr_q1
+      rw [List.getElem?_eq_getElem hq1_lt_tr] at this
+      exact Option.some_inj.mp this
+    rw [h_step_eq]
+    exact applyStep_sstore_lookupSlot_eq _ _ _ _
+  -- No SSTOREs on (C.address, C.guardSlot) in [q + 2, k).
+  have h_no_sstore_pre : ∀ p, q + 2 ≤ p → p < k → ∀ step, tr[p]? = some step →
+      ¬ step.IsSStoreOn C.address C.guardSlot := by
+    intro p h_pge h_plt step h_step ⟨v, h_eq⟩
+    rw [h_eq] at h_step
+    have h_p_lt_tr : p < tr.length := by omega
+    have h_cf_p := h_so ⟨p, h_p_lt_tr⟩ C.address C.guardSlot v h_step
+    have h_v_in : v = C.lockedValue ∨ v = C.unlockedValue :=
+      guard_sstore_value_in_C_frame C tr q finish f h_isOZ h_match p
+        (by omega) (by omega) h_cf_p v h_step
+    rcases h_v_in with h_v_lock | h_v_unlock
+    · -- v = lockedValue: p = q + 1 (lock_position_unique). But p ≥ q + 2. Contradiction.
+      rw [h_v_lock] at h_step
+      have h_p_eq := lock_position_unique_in_C_frame C h_distinct tr q finish caller_q value_q
+        h_call_q f h_isOZ h_match p (by omega) (by omega) h_cf_p h_step
+      omega
+    · -- v = unlockedValue: p = punlock (unlock_position_unique). But p < k = pcall < punlock.
+      rw [h_v_unlock] at h_step
+      have h_q1_lt_pu : q + 1 < punlock := lt_trans h_q1_lt_pc h_pc_lt_pu
+      have h_p_eq := unlock_position_unique_in_C_frame C h_distinct tr q finish caller_q value_q
+        h_call_q f h_isOZ h_match p punlock (by omega) (by omega) h_cf_p h_step
+        h_q1_lt_pu h_pu_lt_f h_cf_pu h_tr_pu
+      -- p = punlock. But k = pcall < punlock = p, and p < k. Contradiction.
+      omega
+  -- Slot at k = slot at q + 2 = lockedValue (by slot stability).
+  have hk_gt_q1 : q + 1 < k := by
+    -- k = pcall and q + 1 < pcall (from h_q1_lt_pc).
+    rw [h_k_eq_pc]; exact h_q1_lt_pc
+  have h_stable := slot_stable_no_sstore s₀ tr C.address C.guardSlot
+    (q + 2) k (by omega) hk_le h_no_sstore_pre
+  unfold guardSlotAt
+  rw [← h_stable]
+  exact h_slot_q2
+
 /-! ## The F4 Lift Theorem -/
 
 /-- **F4 Lift Theorem — `ozGuardDiscipline_implies_RTO`.** Every
@@ -370,8 +484,29 @@ theorem ozGuardDiscipline_implies_RTO
       k.val hk_lt caller value h_call
     rw [h_unlocked]
     exact h_distinct.symm
-  · -- Conjunct 4 (TraceCCallLocked): substantive (Phase B).
-    sorry
+  · -- Conjunct 4 (TraceCCallLocked): use L3 in the genuine case;
+    -- the "phantom CALL" case (currentFrameAt = none with caller = C.address)
+    -- is W8 — not provable from the current `executes_C` hypotheses.
+    intro k callee value h_call
+    have hk_lt : k.val < tr.length := k.isLt
+    have h_exec' : executes_C C s₀ tr := ⟨h_valid, h_init, h_dispatch⟩
+    -- By CallsFromTopFrame, currentFrameAt = some C.address ∨ none.
+    obtain ⟨_, h_calls_from, _⟩ := h_valid
+    have h_disj := h_calls_from k C.address callee value h_call
+    rcases h_disj with h_cf_some | h_cf_none
+    · -- Case 1: currentFrameAt = some C.address. Use L3.
+      exact executes_C_guard_locked_during_body_call C h_oz h_distinct s₀ tr h_exec'
+        k.val hk_lt callee value h_call h_cf_some
+    · -- Case 2: phantom CALL (W8). The model's `CallsFromTopFrame` allows
+      -- `currentFrameAt tr k = none` while `caller = C.address`, which permits
+      -- traces where C "issues" a CALL while the stack is empty. In such
+      -- traces, no C-frame is open at k, so no body-execution argument applies.
+      -- The slot at k could be `unlockedValue` (e.g., after a prior C-frame's
+      -- unlock), which violates `TraceCCallLocked`. This is a model gap —
+      -- `CallsFromTopFrame`'s OR-none clause was meant only for the very first
+      -- CALL (initial entry), not for arbitrary mid-trace CALLs from empty
+      -- stack. See an internal session report §W8 for the named wall.
+      sorry
   · -- Conjunct 5 (TraceCFrameStartsWithLock): direct from MatchesBody.
     intro k caller value h_call
     have hk_lt : k.val < tr.length := k.isLt
