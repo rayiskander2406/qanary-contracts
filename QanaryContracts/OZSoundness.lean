@@ -51,6 +51,25 @@ namespace QanaryContracts
 def NoCallInSteps (steps : List FunctionBody.Step) : Prop :=
   ∀ s ∈ steps, ¬ ∃ callee value, s = FunctionBody.Step.call callee value
 
+/-- Predicate: a function-body step list contains no `.sstore` step
+    targeting the given slot. Used by Phase 5 Session 4's
+    strengthening of `IsOZGuardedFunction` (Q-VRVP2-1 confirmation,
+    2026-04-28) to enforce the body-level guard-slot mutation
+    invariant.
+
+    Real OZ-decorated functions never SSTORE the guard slot mid-body
+    — only at function entry (the mandatory lock SSTORE) and exit
+    (the mandatory unlock SSTORE). Without this constraint,
+    `IsOZGuardedFunction` admits adversarial bodies that lock at
+    entry, then unlock mid-body via a pre-segment SSTORE, then issue
+    the external CALL with the guard already unlocked — violating
+    `TraceCCallLocked` at the trace level. The W4 wall
+    (`adversarial_body_fails_strengthened_oz`) machine-checks the
+    counter-example. -/
+def NoSStoreOnGuardSlotInSteps (slot : Word256)
+    (steps : List FunctionBody.Step) : Prop :=
+  ∀ s ∈ steps, ¬ ∃ val, s = FunctionBody.Step.sstore slot val
+
 /-- A function body follows the OpenZeppelin guard discipline iff
     its body has the shape
 
@@ -76,6 +95,17 @@ def NoCallInSteps (steps : List FunctionBody.Step) : Prop :=
     definition makes the single-call constraint explicit and
     enforceable.
 
+    **Phase 5 Session 4 strengthening (Q-VRVP2-1, 2026-04-28):** the
+    Phase 4 Session 6 definition still allowed `pre`/`post` to
+    contain `.sstore` steps targeting the guard slot itself, admitting
+    an adversarial body that unlocks mid-body and fires the external
+    CALL with the guard unlocked (W4 wall, machine-checked as
+    `adversarial_body_fails_strengthened_oz`). The strengthened
+    definition adds `NoSStoreOnGuardSlotInSteps C.guardSlot pre/post`,
+    matching real-world OZ behavior (production OZ-decorated functions
+    never SSTORE the guard slot mid-body) and closing the F4 lift's
+    Conjunct-4 sub-case.
+
     The model intentionally ignores conditional revert-if-locked
     entry checks at this layer; that constraint enters via the
     trace-level `ReachableTraceOf` predicate (`TraceEntryRevert` +
@@ -92,6 +122,8 @@ def IsOZGuardedFunction (C : Contract) (f : FunctionBody) : Prop :=
       ∧ callee ≠ C.address
       ∧ NoCallInSteps pre
       ∧ NoCallInSteps post
+      ∧ NoSStoreOnGuardSlotInSteps C.guardSlot pre
+      ∧ NoSStoreOnGuardSlotInSteps C.guardSlot post
 
 /-- A contract `C` follows the OZ guard discipline iff every
     declared function body is OZ-guarded (and `C.functions` is
@@ -155,14 +187,19 @@ def ozWitnessTrace : ExecutionTrace := [
 
 /-- The witness function body is OZ-guarded. Take `pre = []`, `post = []`,
     `callee = ozWitnessCallee`, `value = ⟨0, _⟩`. The `NoCallInSteps`
-    conjuncts (Phase 4 Session 6 tightening) hold vacuously since
-    both `pre` and `post` are empty lists. -/
+    conjuncts (Phase 4 Session 6 tightening) and the
+    `NoSStoreOnGuardSlotInSteps` conjuncts (Phase 5 Session 4
+    strengthening) all hold vacuously since both `pre` and `post`
+    are empty lists. -/
 theorem ozWitnessFunction_isOZGuarded :
     IsOZGuardedFunction ozWitnessContract ozWitnessFunction := by
-  refine ⟨[], ozWitnessCallee, ⟨0, by decide⟩, [], ?_, ?_, ?_, ?_⟩
+  refine ⟨[], ozWitnessCallee, ⟨0, by decide⟩, [], ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rfl
   · decide
   · -- NoCallInSteps [] — vacuous (no element in [])
+    intro s hs; cases hs
+  · intro s hs; cases hs
+  · -- NoSStoreOnGuardSlotInSteps _ [] — vacuous (no element in [])
     intro s hs; cases hs
   · intro s hs; cases hs
 
@@ -177,6 +214,93 @@ theorem ozWitnessContract_OZGuardDiscipline :
     simp [ozWitnessContract] at hf
     subst hf
     exact ozWitnessFunction_isOZGuarded
+
+/-! ## W4 Wall — `adversarial_body_fails_strengthened_oz` (Phase 5 Session 4)
+
+Per Ray's Q-VRVP2-1 confirmation (2026-04-28). The W4 wall — that
+the Phase-4-Session-6 `IsOZGuardedFunction` (without
+`NoSStoreOnGuardSlotInSteps` on pre/post) admits an adversarial
+body shape where pre or post segments SSTORE the guard slot
+mid-body — is preserved as a named theorem alongside W1 (vacuous
+CEI hypothesis, Session 3), W2 (`stateless_trace_breaks_naive_strategy`,
+Session 3), and W3 (`weak_rto_admits_self_unlock_reentry`,
+Session 7.1).
+
+### The wall
+
+A function body of shape
+
+  [sstore guardSlot lockedValue,           -- mandatory lock
+   sstore guardSlot unlockedValue,         -- pre's mid-body unlock
+   call callee value,                      -- single external CALL
+   sstore guardSlot lockedValue,           -- post (any)
+   sstore guardSlot unlockedValue,         -- mandatory unlock
+   ret true]                               -- mandatory ret
+
+satisfies the Phase-4-Session-6 `IsOZGuardedFunction` (with
+`pre = [sstore guardSlot unlockedValue]`,
+`post = [sstore guardSlot lockedValue]`, `NoCallInSteps` vacuous on
+both — neither contains a `.call`). The body's external CALL fires
+at trace position 3 with `guardSlotAt = unlockedValue`, violating
+`TraceCCallLocked` at the trace level under any genuine execution.
+
+The Phase 5 Session 4 strengthening (Q-VRVP2-1) adds
+`NoSStoreOnGuardSlotInSteps C.guardSlot pre` and
+`NoSStoreOnGuardSlotInSteps C.guardSlot post` to
+`IsOZGuardedFunction`. Under the strengthened definition, the
+adversarial body fails the new pre conjunct because the unique
+decomposition forces `pre = [sstore guardSlot unlockedValue]` (one
+SSTORE on the guard slot).
+
+This wall was caught by the F4 design's VRVP-2 protocol BEFORE any
+`BodyTraceLift.lean` Lean code was written —
+an internal methodology note §5 + Phase 5 Session 4 Step 2 report.
+
+### Documented as
+
+* This file: `adversarialBody` + `adversarial_body_fails_strengthened_oz`.
+* the internal methodology notes § 10 (the W4 wall paragraph).
+-/
+
+/-- The W4 adversarial body. Six steps: lock at entry, mid-body
+    unlock in `pre`, single external CALL, mid-body relock in
+    `post`, mandatory unlock + ret tail. Satisfies the
+    Phase-4-Session-6 `IsOZGuardedFunction` shape but FAILS the
+    Phase-5-Session-4 strengthening via `NoSStoreOnGuardSlotInSteps`
+    on `pre`. -/
+def adversarialBody : FunctionBody :=
+  [FunctionBody.Step.sstore ozWitnessGuardSlot ⟨2, by decide⟩,
+   FunctionBody.Step.sstore ozWitnessGuardSlot ⟨1, by decide⟩,
+   FunctionBody.Step.call ozWitnessCallee ⟨0, by decide⟩,
+   FunctionBody.Step.sstore ozWitnessGuardSlot ⟨2, by decide⟩,
+   FunctionBody.Step.sstore ozWitnessGuardSlot ⟨1, by decide⟩,
+   FunctionBody.Step.ret true]
+
+/-- **W4 wall (Theorem-grade methodology exhibit).** The adversarial
+    body fails the strengthened `IsOZGuardedFunction`. The unique
+    decomposition forces `pre = [sstore guardSlot unlockedValue]` (a
+    single SSTORE targeting the guard slot), which violates
+    `NoSStoreOnGuardSlotInSteps C.guardSlot pre`. -/
+theorem adversarial_body_fails_strengthened_oz :
+    ¬ IsOZGuardedFunction ozWitnessContract adversarialBody := by
+  rintro ⟨pre, callee, value, post, h_eq, _, _, _, h_pre_ns, _⟩
+  cases pre with
+  | nil =>
+    -- pre = [] forces adversarialBody[1] to be the call. But
+    -- adversarialBody[1] is sstore. Contradiction by injection.
+    simp only [adversarialBody, ozWitnessContract, List.nil_append] at h_eq
+    injection h_eq with _ h_eq2
+    injection h_eq2 with h_call _
+    cases h_call
+  | cons head rest =>
+    -- pre = head :: rest. Injection forces head = sstore ⟨7,_⟩ ⟨1,_⟩.
+    -- Apply h_pre_ns to head ∈ pre.
+    have h_head : head = FunctionBody.Step.sstore ozWitnessGuardSlot ⟨1, by decide⟩ := by
+      simp only [adversarialBody, ozWitnessContract, List.cons_append] at h_eq
+      injection h_eq with _ h_eq2
+      injection h_eq2 with h_head _
+      exact h_head.symm
+    exact h_pre_ns head (List.mem_cons.mpr (Or.inl rfl)) ⟨⟨1, by decide⟩, h_head⟩
 
 /-- The witness trace's call/return structure is balanced and respects
     `SStoresInOwnFrame` and `CallsFromTopFrame`. Same `interval_cases`
@@ -1256,33 +1380,50 @@ theorem guard_locked_during_call (C : Contract) (s₀ : EVMState)
     injection h_some_eq
   exact h_A h_cfj_ne
 
-/-! ## Theorem 5 — `oz_guard_prevents_reentrancy` (main soundness)
+/-! ## Theorem 5* — `reentrancy_free_universal` (Phase 5 Step 0 / Path γ′)
 
-The substantive proof of the paper's main soundness target. Splits
-on the caller of the reentrant CALL at `j`:
+Strict generalization of Theorem 5: if `C.lockedValue ≠ C.unlockedValue`,
+then `C` is reentrancy-free under the OZ trace policy — *without* any
+body-shape hypothesis. The `OZGuardDiscipline` hypothesis of the
+original Theorem 5 statement is genuinely unused in the trace-level
+reasoning: `ReachableTraceOf`'s five conjuncts (`InitialGuardUnlocked`,
+`ValidExecution`, `TraceEntryRevert`, `TraceCCallLocked`,
+`TraceCFrameStartsWithLock`) already encode the OZ guard discipline
+at the trace level, so the implication holds for any contract `C`
+regardless of body shape.
+
+This is the Phase 5 Step 0 deliverable per
+an internal handoff document and the internal completeness strategy's
+Path α plan. It closes the unused-hypothesis finding from the
+Phase 5 Session 1 VRVP and gives the paper a cleaner, stronger
+headline: trace-policy soundness depends only on `l ≠ u`, not on any
+body-shape predicate.
+
+VRVP (2026-04-28): hand-construction of `(C, s₀, tr)` with `l ≠ u`,
+`ReachableTraceOf C s₀ tr`, AND `ReentrancyVulnerableStatefulOn C s₀ tr`
+fails for the same reason Theorem 5's proof closes — both `caller_j =
+C.address` (blocked by `no_self_call_under_RTO`) and `caller_j ≠
+C.address` (blocked by `guard_locked_during_call` + distinctness)
+yield contradictions. No `OZGuardDiscipline` step appears in the
+contradiction chain.
+
+Splits on the caller of the reentrant CALL at `j`:
 
 * **Case A (self-call)** — caller = `C.address`. Closes via
-  `no_self_call_under_RTO` (Phase 4 Session 7.2).
+  `no_self_call_under_RTO`.
 * **Case B (external reentry)** — caller ≠ `C.address`. Closes via
-  `guard_locked_during_call` + the distinctness hypothesis
-  `h_distinct : C.lockedValue ≠ C.unlockedValue`.
+  `guard_locked_during_call` + the distinctness hypothesis. -/
 
-The `OZGuardDiscipline` hypothesis is part of the target signature
-(per `oz_guard_prevents_reentrancy_target`) but is not used in the
-trace-level reasoning — RTO already encodes the trace-level guard
-discipline that the proof needs. The body-level → trace-level lift
-(`OZGuardDiscipline C → ∀ s₀ tr, ReachableTraceOf C s₀ tr → …`) is
-not needed here because `ReentrancyFree` is defined directly over
-`ReachableTraceOf`. -/
+/-- **Theorem 5* (`reentrancy_free_universal`).** For any contract
+    `C` with distinct lock/unlock values, `C` is reentrancy-free
+    under the OZ trace policy. No body-shape hypothesis required.
+    Strict generalization of Theorem 5.
 
-/-- **Theorem 5 (main soundness).** If `C.lockedValue ≠ C.unlockedValue`
-    and `C` follows the OpenZeppelin guard discipline, then `C` is
-    reentrancy-free.
-
-    *Status:* COMPLETE. -/
-theorem oz_guard_prevents_reentrancy (C : Contract) :
-    oz_guard_prevents_reentrancy_target C := by
-  intro h_distinct _h_oz s₀ tr h_reach h_vuln
+    *Status:* COMPLETE (Phase 5 Session 2, 2026-04-28). -/
+theorem reentrancy_free_universal (C : Contract)
+    (h_distinct : C.lockedValue ≠ C.unlockedValue) :
+    ReentrancyFree C := by
+  intro s₀ tr h_reach h_vuln
   obtain ⟨i, j, hij, hjlen, hCalli, hCallj, hNest, hGuardJ⟩ := h_vuln
   obtain ⟨caller_i, value_i, h_tr_i⟩ := hCalli
   obtain ⟨caller_j, value_j, h_tr_j⟩ := hCallj
@@ -1295,5 +1436,27 @@ theorem oz_guard_prevents_reentrancy (C : Contract) :
                        caller_i value_i h_tr_i hNest caller_j value_j h_tr_j h_caller
     have h_eq : C.lockedValue = C.unlockedValue := h_locked.symm.trans hGuardJ
     exact h_distinct h_eq
+
+/-! ## Theorem 5 — `oz_guard_prevents_reentrancy` (main soundness)
+
+Phase 5 Session 2 (2026-04-28): re-derived as a one-line corollary of
+`reentrancy_free_universal` (Theorem 5*). The original 12-line proof
+body is preserved verbatim inside `reentrancy_free_universal`; Theorem 5
+now delegates to it and discards the unused `OZGuardDiscipline`
+hypothesis. The named theorem `oz_guard_prevents_reentrancy` and its
+statement (`oz_guard_prevents_reentrancy_target`) are unchanged — audit
+baseline references remain valid (an internal audit transcript,
+`PrintAxioms.lean`). -/
+
+/-- **Theorem 5 (main soundness).** If `C.lockedValue ≠ C.unlockedValue`
+    and `C` follows the OpenZeppelin guard discipline, then `C` is
+    reentrancy-free. Corollary of `reentrancy_free_universal`
+    (Theorem 5*) — the `OZGuardDiscipline` hypothesis is unused.
+
+    *Status:* COMPLETE. -/
+theorem oz_guard_prevents_reentrancy (C : Contract) :
+    oz_guard_prevents_reentrancy_target C := by
+  intro h_distinct _h_oz
+  exact reentrancy_free_universal C h_distinct
 
 end QanaryContracts
