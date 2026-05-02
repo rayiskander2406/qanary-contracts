@@ -10,47 +10,86 @@ Model in Lean 4 + Mathlib*. Part of the QANARY research line.
 
 | Item                                  | State                                             |
 |---------------------------------------|---------------------------------------------------|
-| Build                                 | 894 jobs, zero errors, zero warnings              |
-| `sorry` / `admit` count               | 0                                                 |
+| Build                                 | 900 jobs, zero errors, one pre-existing Mathlib deprecation notice (`push_neg` → `push Not` at `BodyTraceLift.lean:370`; upstream-Mathlib drift, not a project regression) |
+| `sorry` / `admit` count               | 0 (one grep hit at `BodyTraceLift.lean:36` is docstring text inside the BodyTraceLift policy comment, not a tactic-level `sorry`) |
 | Project `axiom` declarations          | 0                                                 |
-| Headline theorem axioms               | `[propext, Classical.choice, Quot.sound]`         |
-| Tagged release                        | `v1.0-soundness`                                  |
+| Headline theorem axioms               | `[propext, Classical.choice, Quot.sound]` (Theorem 5, Theorem 5\*, F4 lift `ozGuardDiscipline_implies_RTO` — all kernel-only) |
+| Tagged release                        | `v1.0-soundness` (commit `d9141d6`); Phase 5 Session 11 closure at `cea7903`; HEAD post-R8-audit at `cbca03d` |
 | Lean toolchain                        | `leanprover/lean4:v4.30.0-rc1`                    |
 | Mathlib pin                           | `322515540d7f`                                    |
 
 ## What's proved
 
 * **Theorem 5 (`oz_guard_prevents_reentrancy`).** Universal soundness for the
-  single-external-call subset of contracts satisfying `OZGuardDiscipline`,
-  against a minimal 4-opcode EVM call-frame model.
+  single-external-call subset of contracts satisfying the strengthened
+  (6-conjunct, post-W4) `OZGuardDiscipline`, against a minimal 4-opcode EVM
+  call-frame model.
   Statement: `∀ C : Contract, lockedValue ≠ unlockedValue → OZGuardDiscipline C → ReentrancyFree C`.
+* **Theorem 5\* (`reentrancy_free_universal`, Phase 5 Session 2).** Trace-level
+  companion of Theorem 5; drops the unused `OZGuardDiscipline` hypothesis from
+  the soundness theorem, with Theorem 5 now delegating to it.
+* **F4 body-to-trace lift (`ozGuardDiscipline_implies_RTO`, Phase 5 Session 11).**
+  Universal lift from body-faithful `executes_C` operational executions to
+  trace-level `ReachableTraceOf`, under a `NoPhantomCalls` antecedent (a
+  foundation-layer hypothesis introduced to resolve W8; per-protocol
+  discharge is Layer 6 / Phase 5E future work). Composes three infrastructure
+  modules: `Executes/CountHelpers.lean`, `Executes/StackHistory.lean`,
+  `Executes/BodyShape.lean`.
 * **Theorem 4 (`cei_oz_incompatible`).** Machine-checked formal incompatibility
   between Checks-Effects-Interactions and the OpenZeppelin guard discipline:
   there exists an OZ-disciplined contract whose execution trace violates CEI
   by design (the unlock SSTORE follows the external call).
 * **Theorem 1 (`dao_attack_is_reentrant`).** The 2016 DAO attack exhibits
   structural reentrancy (call-graph topology only).
-* **Three methodology walls (W1, W2, W3).** Machine-checked exhibits showing
-  the Vacuity Re-Verification Protocol surfaced under-specifications during
-  proof development:
-  * **W1** (`hypothesis_H_is_inconsistent`) — the literal CEI-only universal
-    hypothesis is globally inconsistent.
-  * **W2** (`stateless_trace_breaks_naive_strategy`) — `ValidExecution` ∧
-    `SatisfiesCEI` ∧ `ReentrancyVulnerableStateful` are jointly satisfiable.
-  * **W3** (`weak_rto_admits_self_unlock_reentry`) — a weak Reachable-Trace-Of
-    predicate admits a self-unlock-reentry attack.
+* **Seven methodology walls (W1, W2, W3, W4, W5, W7, W8).** Machine-checked
+  exhibits documenting where the VRVP-driven discipline + named-walls
+  convention surfaced under-specifications, permissiveness gaps, or missing
+  reasoning machinery:
+  * **W1** (`hypothesis_H_is_inconsistent`, Phase 3 Session 3) — the literal
+    CEI-only universal hypothesis is globally inconsistent.
+  * **W2** (`stateless_trace_breaks_naive_strategy`, Phase 3 Session 3) —
+    `ValidExecution` ∧ `SatisfiesCEI` ∧ `ReentrancyVulnerableStateful` are
+    jointly satisfiable.
+  * **W3** (`weak_rto_admits_self_unlock_reentry`, Phase 4 Session 7.1) — a
+    weak Reachable-Trace-Of predicate admits a self-unlock-reentry attack.
+  * **W4** (`adversarial_body_fails_strengthened_oz`, Phase 5 Session 4) —
+    body-level guard mutation through pre/post SSTORE; closed by
+    `NoSStoreOnGuardSlotInSteps` strengthening of `IsOZGuardedFunction`.
+  * **W5** (Phase 5 Session 7, infrastructure family) — open-frame
+    identification gap in `executes_C`; closed via `Executes/StackHistory.lean`
+    (Family B).
+  * **W7** (Phase 5 Session 8, infrastructure family) — body-shape extraction
+    gap; closed via `Executes/BodyShape.lean` (Family C).
+  * **W8** (`phantom_violates_TraceCCallLocked`,
+    `ozGuardDiscipline_implies_RTO_is_unprovable_as_stated`, Phase 5
+    Sessions 9–11) — foundation-layer phantom-CALL permissiveness; named
+    Session 9, mechanically witnessed Session 10 (`W8.lean`), resolved
+    Session 11 via `NoPhantomCalls` antecedent on F4 lift.
+  *(W6 was a tentative wall name allocated during Session 8 planning that
+  did not surface; no W6 wall exists in the program.)*
+* **Wall-typology distinction** (paper §10 / scaffold §8.4 contribution):
+  infrastructure walls (W5, W7) vs foundation walls (W4, W8), with
+  qualitatively different resolution shapes and cost profiles. Promoted to
+  PROVEN-pattern at an internal project note.
 
-## What's in progress (F2–F4 per an internal handoff document)
+## What's in progress (F2, F3, completeness, Layer 6 per an internal handoff document)
 
 * **Completeness direction.** Constructive `extractSafetyCertificate` —
   bottom-up plan: `NoExternalCalls` → `NoSStores` → `SatisfiesCEI_AllPaths`
-  → `OZGuardConfig` (per the internal completeness strategy and the handover).
-* **Multi-external-call generalization** of `IsOZGuardedFunction`.
-* **Body-to-trace lift** connecting Solidity function bodies to the
-  `ReachableTraceOf` predicate.
-* **Protocol instantiations.** Pendle (Solidity), Compound (Solidity).
-  Curve is excluded — its `nonReentrant` decorator is in Vyper with
-  different semantics.
+  → `OZGuardConfig` (per the internal completeness strategy and the handover). The F4
+  lift's closure makes the Layer 5 antecedent meaningful (`executes_C`-quantified
+  rather than vacuous).
+* **Multi-external-call generalization (F2)** of `IsOZGuardedFunction`. The
+  Phase 5 Session 4 W4 strengthening narrowed the certified class further;
+  multi-call generalization remains the highest-value substantive extension.
+* **`NoPhantomCalls` discharge (Layer 6 / Phase 5E).** The F4 lift's per-trace
+  antecedent must be discharged per-protocol via solc CALL semantics. We
+  expect a class-level lemma `OZGuardDiscipline C → ∀ tr, executes_C C s₀ tr → NoPhantomCalls C tr`
+  to be mechanizable for the OZ-discipline class as a whole. See
+  the internal paper scaffold §11 for the full discharge obligation framing.
+* **Protocol instantiations (F3).** Pendle (Solidity), Compound (Solidity).
+  Curve is excluded — its `@nonreentrant` decorator is in Vyper with
+  different semantics; see the internal paper scaffold §11 for the Vyper carve-out.
 
 ## What's out of scope (current scope limits)
 
