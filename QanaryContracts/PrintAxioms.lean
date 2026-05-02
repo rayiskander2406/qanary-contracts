@@ -16,6 +16,7 @@ import QanaryContracts.CEISufficiency
 import QanaryContracts.Reachability
 import QanaryContracts.CEISufficiencyV2
 import QanaryContracts.OZSoundness
+import QanaryContracts.W8
 
 open QanaryContracts
 
@@ -169,3 +170,15 @@ theorem audit_guard_protected_blocks_state_aware :
 -- satisfied the Phase-4-Session-6 definition fails the strengthened
 -- version. Caught by VRVP-2 before BodyTraceLift.lean code was written.
 #print axioms QanaryContracts.adversarial_body_fails_strengthened_oz
+
+-- Phase 5 Session 10 (2026-05-02) — W8 wall mechanization.
+-- The phantom-CALL counter-example from Session 9 paper-and-pencil
+-- analysis is now machine-checked. The headline negation theorem
+-- demonstrates that `ozGuardDiscipline_implies_RTO`'s currently-stated
+-- universal claim is FALSE. See QanaryContracts/W8.lean.
+#print axioms QanaryContracts.phantomCallTrace_validExecution
+#print axioms QanaryContracts.phantom_matchesBody_at_0_6
+#print axioms QanaryContracts.phantom_executes_C
+#print axioms QanaryContracts.phantom_slot_at_6_eq_unlockedValue
+#print axioms QanaryContracts.phantom_violates_TraceCCallLocked
+#print axioms QanaryContracts.ozGuardDiscipline_implies_RTO_is_unprovable_as_stated
