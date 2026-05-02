@@ -16,6 +16,7 @@ import QanaryContracts.CEISufficiency
 import QanaryContracts.Reachability
 import QanaryContracts.CEISufficiencyV2
 import QanaryContracts.OZSoundness
+import QanaryContracts.BodyTraceLift
 import QanaryContracts.W8
 
 open QanaryContracts
@@ -182,3 +183,12 @@ theorem audit_guard_protected_blocks_state_aware :
 #print axioms QanaryContracts.phantom_slot_at_6_eq_unlockedValue
 #print axioms QanaryContracts.phantom_violates_TraceCCallLocked
 #print axioms QanaryContracts.ozGuardDiscipline_implies_RTO_is_unprovable_as_stated
+
+-- Phase 5 Session 11 (2026-05-02) — W8 P3 resolution: F4 LIFT THEOREM
+-- LAYER 4 CLOSURE.
+-- ozGuardDiscipline_implies_RTO now closes universally given the
+-- NoPhantomCalls antecedent. This is the load-bearing certificate-shape
+-- audit: the F4 lift theorem must show only kernel axioms, no sorryAx.
+-- The NoPhantomCalls hypothesis is mechanically discharged at deployment
+-- time per Layer 6 P4 work.
+#print axioms QanaryContracts.ozGuardDiscipline_implies_RTO

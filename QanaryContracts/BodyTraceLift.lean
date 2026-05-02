@@ -463,16 +463,23 @@ theorem executes_C_guard_locked_during_body_call
       `MatchesBody`'s body-faithfulness conjunct (first projection
       element = first `unfoldBody` element = lock SSTORE).
 
-    *Status:* Phase 5 Session 4 Step 3 SKELETON (`sorry` body).
-    Substantive proof is the Phase 5 Session 5+ deliverable, gated
-    by VRVP-3. -/
+    *Status:* Phase 5 Session 11 — CLOSED. Conjuncts 3, 4, 5 proven
+    via L2 / L3 / MatchesBody-faithfulness. The Conjunct 4 phantom-CALL
+    case (W8, named in Session 9 / mechanically witnessed in
+    Session 10's `QanaryContracts/W8.lean`) is discharged by the
+    `NoPhantomCalls` antecedent added in Session 11. The hypothesis
+    is mechanically discharged at deployment time per Layer 6's P4
+    work; it states that any CALL with `caller = C.address` has C on
+    top of the stack — exactly the EVM-semantic guarantee on a CALL
+    opcode's caller field. -/
 theorem ozGuardDiscipline_implies_RTO
     (C : Contract)
     (h_oz : OZGuardDiscipline C)
     (h_distinct : C.lockedValue ≠ C.unlockedValue)
     (s₀ : EVMState)
     (tr : ExecutionTrace)
-    (h_exec : executes_C C s₀ tr) :
+    (h_exec : executes_C C s₀ tr)
+    (h_no_phantom : NoPhantomCalls C tr) :
     ReachableTraceOf C s₀ tr := by
   obtain ⟨h_valid, h_init, h_dispatch⟩ := h_exec
   refine ⟨h_init, h_valid, ?_, ?_, ?_⟩
@@ -497,16 +504,14 @@ theorem ozGuardDiscipline_implies_RTO
     · -- Case 1: currentFrameAt = some C.address. Use L3.
       exact executes_C_guard_locked_during_body_call C h_oz h_distinct s₀ tr h_exec'
         k.val hk_lt callee value h_call h_cf_some
-    · -- Case 2: phantom CALL (W8). The model's `CallsFromTopFrame` allows
-      -- `currentFrameAt tr k = none` while `caller = C.address`, which permits
-      -- traces where C "issues" a CALL while the stack is empty. In such
-      -- traces, no C-frame is open at k, so no body-execution argument applies.
-      -- The slot at k could be `unlockedValue` (e.g., after a prior C-frame's
-      -- unlock), which violates `TraceCCallLocked`. This is a model gap —
-      -- `CallsFromTopFrame`'s OR-none clause was meant only for the very first
-      -- CALL (initial entry), not for arbitrary mid-trace CALLs from empty
-      -- stack. See an internal session report §W8 for the named wall.
-      sorry
+    · -- Case 2: phantom CALL (W8). The `NoPhantomCalls` antecedent
+      -- (Session 11 P3 resolution) rules out this case directly: any CALL
+      -- with caller = C.address must have currentFrameAt = some C.address,
+      -- contradicting the case hypothesis currentFrameAt = none.
+      have h_cf_some : currentFrameAt tr k.val = some C.address :=
+        h_no_phantom k callee value h_call
+      rw [h_cf_none] at h_cf_some
+      exact absurd h_cf_some (by simp)
   · -- Conjunct 5 (TraceCFrameStartsWithLock): direct from MatchesBody.
     intro k caller value h_call
     have hk_lt : k.val < tr.length := k.isLt
