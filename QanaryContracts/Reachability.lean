@@ -110,6 +110,40 @@ def TraceCFrameStartsWithLock (C : Contract) (tr : ExecutionTrace) : Prop :=
     tr[k.val]? = some (EVMStep.call caller C.address value) →
     tr[k.val + 1]? = some (EVMStep.sstore C.address C.guardSlot C.lockedValue)
 
+/-! ## `NoPhantomCalls` — Phase 5 Session 11 (W8 P3 resolution)
+
+Foundation-layer hypothesis required for the F4 lift theorem
+`ozGuardDiscipline_implies_RTO`. Closes the W8 phantom-CALL gap
+named in Session 9, mechanically witnessed in Session 10
+(`QanaryContracts/W8.lean`), and resolved here via P3
+antecedent extension.
+
+W8: `CallsFromTopFrame`'s OR-`none` clause permits CALLs with
+`caller = C.address` while `currentFrameAt tr k = none` (stack
+empty). The OR-`none` clause is load-bearing for legitimate
+EOA-entry CALLs (k=0 with caller=EOA), so it cannot be tightened
+without breaking entry semantics. The precise refinement is to
+require, *as a hypothesis on the lift theorem*, that any CALL
+with caller=C.address has C on top of the stack — i.e., no
+phantom CALLs originating from C. -/
+
+/-- **No-phantom-call constraint (W8 P3 resolution):** every CALL
+    with `caller = C.address` has `C.address` on top of the call
+    stack at that position.
+
+    Models the EVM-semantic guarantee that a CALL opcode's caller
+    field is the currently-executing contract. Discharged at
+    deployment time per-protocol (Layer 6 P4 work). For abstract
+    traces, it is an explicit hypothesis on the F4 lift theorem.
+
+    *Minimal* negation of the W8 phantom-CALL counter-example:
+    `phantomCallTrace` (`QanaryContracts/W8.lean`) violates this at
+    `k=6` (caller=C, currentFrameAt=none). -/
+def NoPhantomCalls (C : Contract) (tr : ExecutionTrace) : Prop :=
+  ∀ k : Fin tr.length, ∀ callee value,
+    tr[k.val]? = some (EVMStep.call C.address callee value) →
+    currentFrameAt tr k.val = some C.address
+
 /-! ## `ReachableTraceOf` — Phase 4 Session 7.1 (Track A.2 + Fix A)
 
 A trace is reachable from `C` starting at `s₀` iff all five
