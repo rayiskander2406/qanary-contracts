@@ -60,10 +60,34 @@ jobs:
         run: |
           set -euo pipefail
           output=$(lake env lean QanaryContracts/PrintAxioms.lean 2>&1)
-          headline=$(echo "$output" | grep "oz_guard_prevents_reentrancy" || true)
-          echo "$headline"
-          if ! echo "$headline" | grep -q "depends on axioms: \[propext, Classical.choice, Quot.sound\]"; then
-            echo "::error::oz_guard_prevents_reentrancy axiom set differs from expected"
-            echo "::error::expected: [propext, Classical.choice, Quot.sound]"
-            exit 1
-          fi
+          expected="depends on axioms: [propext, Classical.choice, Quot.sound]"
+          # Extended Phase 5 Session 13 Unit 3 (F14): now guards all four
+          # post-Layer-4 / Layer 5 headline theorems against axiom drift on
+          # every commit. If any of these acquires a wider axiom profile,
+          # CI fails before the change can land.
+          theorems=(
+            "QanaryContracts.oz_guard_prevents_reentrancy"
+            "QanaryContracts.reentrancy_free_universal"
+            "QanaryContracts.ozGuardDiscipline_implies_RTO"
+            "QanaryContracts.no_functions_implies_RFG"
+          )
+          fail=0
+          for thm in "${theorems[@]}"; do
+            # Anchor the grep to the line beginning with the quoted theorem
+            # name to avoid substring collisions.
+            line=$(echo "$output" | grep -E "^'${thm}' " || true)
+            if [ -z "$line" ]; then
+              echo "::error::theorem ${thm} not found in PrintAxioms output"
+              echo "::error::add a #print axioms entry to QanaryContracts/PrintAxioms.lean"
+              fail=1
+              continue
+            fi
+            echo "$line"
+            if ! echo "$line" | grep -qF "$expected"; then
+              echo "::error::${thm} axiom set differs from expected"
+              echo "::error::expected: ${expected}"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then exit 1; fi
+          echo "PASS: all four headline theorems carry kernel-only axioms"
