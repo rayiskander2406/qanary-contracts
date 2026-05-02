@@ -18,6 +18,7 @@ import QanaryContracts.CEISufficiencyV2
 import QanaryContracts.OZSoundness
 import QanaryContracts.BodyTraceLift
 import QanaryContracts.W8
+import QanaryContracts.Completeness
 
 open QanaryContracts
 
@@ -192,3 +193,14 @@ theorem audit_guard_protected_blocks_state_aware :
 -- The NoPhantomCalls hypothesis is mechanically discharged at deployment
 -- time per Layer 6 P4 work.
 #print axioms QanaryContracts.ozGuardDiscipline_implies_RTO
+
+-- Phase 5 Session 13 Unit 2 (2026-05-02) — Layer 5 Completeness foundation.
+-- Vacuous foundational sub-case `no_functions_implies_RFG` per Option B
+-- (HS-COMPLETENESS-CAP adjudication: substantive `no_external_calls_implies_RFG`
+-- deferred to Sessions 14-21 because it needs general-frame stack-history
+-- primitives developed during F2 multi-call work). The kernel-only axiom
+-- record on this theorem is the foundation that the four substantive
+-- sub-cases (NoExternalCalls, NoSStores, SatisfiesCEI_AllPaths,
+-- OZGuardConfig) and the disjunction theorem `oz_completeness_full` will
+-- match in Sessions 14-30.
+#print axioms QanaryContracts.no_functions_implies_RFG

@@ -24,5 +24,6 @@ import QanaryContracts.OZSoundness
 import QanaryContracts.Executes
 import QanaryContracts.BodyTraceLift
 import QanaryContracts.W8
+import QanaryContracts.Completeness
 import QanaryContracts.Tests
 import QanaryContracts.Spikes
