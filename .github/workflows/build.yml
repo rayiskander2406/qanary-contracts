@@ -91,3 +91,48 @@ jobs:
           done
           if [ "$fail" -ne 0 ]; then exit 1; fi
           echo "PASS: all four headline theorems carry kernel-only axioms"
+
+      - name: Verify F2-B beta-1 theorem axiom records
+        run: |
+          set -euo pipefail
+          output=$(lake env lean QanaryContracts/PrintAxioms.lean 2>&1)
+          # Phase 5 Session 15 Unit 3: F2-B sub-block beta-1 foundation
+          # theorems gated against axiom drift. Both have axiom records
+          # strictly narrower than the canonical kernel triple, so the
+          # exact-match check above doesn't fit; per-theorem expected
+          # records used instead. Methodology load-bearing claim
+          # ("explicit trusted base") preserved per-theorem.
+          fail=0
+
+          # original_is_general_subset -> expects [propext] only.
+          line=$(echo "$output" | grep -E "^'QanaryContracts.original_is_general_subset' " || true)
+          if [ -z "$line" ]; then
+            echo "::error::theorem original_is_general_subset not found in PrintAxioms output"
+            echo "::error::add a #print axioms entry to QanaryContracts/PrintAxioms.lean"
+            fail=1
+          else
+            echo "$line"
+            if ! echo "$line" | grep -qF "depends on axioms: [propext]"; then
+              echo "::error::original_is_general_subset axiom set differs from expected"
+              echo "::error::expected: 'depends on axioms: [propext]'"
+              fail=1
+            fi
+          fi
+
+          # f2b_inherits_W4_strengthening -> expects no axioms at all.
+          line=$(echo "$output" | grep -E "^'QanaryContracts.f2b_inherits_W4_strengthening' " || true)
+          if [ -z "$line" ]; then
+            echo "::error::theorem f2b_inherits_W4_strengthening not found in PrintAxioms output"
+            echo "::error::add a #print axioms entry to QanaryContracts/PrintAxioms.lean"
+            fail=1
+          else
+            echo "$line"
+            if ! echo "$line" | grep -qF "does not depend on any axioms"; then
+              echo "::error::f2b_inherits_W4_strengthening axiom set differs from expected"
+              echo "::error::expected: 'does not depend on any axioms'"
+              fail=1
+            fi
+          fi
+
+          if [ "$fail" -ne 0 ]; then exit 1; fi
+          echo "PASS: F2-B beta-1 theorems carry expected (kernel-subset) axiom records"

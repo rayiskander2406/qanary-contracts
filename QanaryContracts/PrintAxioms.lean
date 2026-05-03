@@ -204,3 +204,20 @@ theorem audit_guard_protected_blocks_state_aware :
 -- OZGuardConfig) and the disjunction theorem `oz_completeness_full` will
 -- match in Sessions 14-30.
 #print axioms QanaryContracts.no_functions_implies_RFG
+
+-- Phase 5 Session 15 Unit 3 (2026-05-03) — F2-B sub-block β-1 foundation.
+-- Two F2-B β-1 theorems gated against axiom drift on every commit.
+-- Both theorems have axiom records strictly narrower than the canonical
+-- kernel triple [propext, Classical.choice, Quot.sound] used by the four
+-- post-Layer-4 / Layer 5 headline theorems above:
+--
+--   * original_is_general_subset: depends on [propext] only.
+--   * f2b_inherits_W4_strengthening: depends on no axioms at all.
+--
+-- The CI workflow's separate "Verify F2-B β-1 theorem axiom records"
+-- step (`.github/workflows/build.yml`) checks each against its
+-- per-theorem expected record rather than the canonical triple.
+-- Methodology load-bearing claim ("explicit trusted base") extended:
+-- both theorems remain within the kernel-only allowlist.
+#print axioms QanaryContracts.original_is_general_subset
+#print axioms QanaryContracts.f2b_inherits_W4_strengthening
