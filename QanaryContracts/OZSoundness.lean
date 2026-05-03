@@ -302,6 +302,63 @@ theorem f2b_inherits_W4_strengthening (C : Contract) (f : FunctionBody)
   obtain ⟨body, h_eq, h_no_sstore, _⟩ := h
   exact ⟨body, h_eq, h_no_sstore⟩
 
+/-! ## F2-B (Phase 5 Session 17) — generalized OZ guard discipline
+
+Sub-block β-2-and-β-3 merged. The discipline-layer analogue of the
+predicate-layer F2-B work landed in Session 15. `OZGuardDisciplineGeneral`
+is a 1:1 substitution of `IsOZGuardedFunctionGeneral` into
+`OZGuardDiscipline`'s body-shape conjunct. The original `OZGuardDiscipline`
+is preserved unchanged (coexistence discipline matching Session 15's
+predicate coexistence).
+
+Per an internal methodology note §5: the headline-theorem layer
+(Theorem 5 + Theorem 5*) is body-shape-agnostic via `ReachableTraceOf`'s
+trace-level abstraction, so the F2-B impact at this layer concentrates
+entirely at `OZGuardDiscipline`'s definition (the single point where
+`IsOZGuardedFunction` flows into Theorem 5's hypothesis chain). The
+generalized discipline definition + a subset implication lemma
+(`OZGuardDiscipline_implies_general`, lifting Session 15's
+`original_is_general_subset` pointwise across the
+`∀ f ∈ C.functions` quantifier) collectively constitute the F2-B
+substitution at the discipline layer.
+
+VRVP at the lemma layer (an internal VRVP methodology note)
+verified the implication's soundness against hand-construction
+counter-example attempts (blocked by Session 15 at the predicate
+level) and elaborator-friction stress-testing (no friction surfaces;
+proof body is direct). -/
+
+/-- F2-B generalized OZ guard discipline. A contract `C` follows the
+    *generalized* OZ guard discipline iff every declared function body
+    is OZ-guarded under `IsOZGuardedFunctionGeneral` (and `C.functions`
+    is non-empty).
+
+    Strict generalization of `OZGuardDiscipline`: every contract
+    satisfying the original discipline also satisfies the generalized
+    one (`OZGuardDiscipline_implies_general` below), but the converse
+    fails for contracts whose function bodies have multi-CALL F2-B
+    shapes that the original predicate rejects.
+
+    The W4 strengthening (`NoSStoreOnGuardSlotInSteps`) and the
+    per-CALL self-call exclusion (`NoCallToSelfInSteps`) inherited
+    from Session 15's `IsOZGuardedFunctionGeneral` propagate through
+    this discipline definition. -/
+def OZGuardDisciplineGeneral (C : Contract) : Prop :=
+  C.functions ≠ [] ∧ ∀ f ∈ C.functions, IsOZGuardedFunctionGeneral C f
+
+/-- The original `OZGuardDiscipline` is a subset of the F2-B
+    `OZGuardDisciplineGeneral`.
+
+    Lifts Session 15's `original_is_general_subset` (axiom record
+    `[propext]`) pointwise across the `∀ f ∈ C.functions` quantifier.
+    The non-emptiness conjunct (`C.functions ≠ []`) carries through
+    unchanged. -/
+theorem OZGuardDiscipline_implies_general (C : Contract) :
+    OZGuardDiscipline C → OZGuardDisciplineGeneral C := by
+  intro h_orig
+  obtain ⟨h_ne, h_all⟩ := h_orig
+  exact ⟨h_ne, fun f hf => original_is_general_subset C f (h_all f hf)⟩
+
 /-! ## Witness for Theorem 4 — a concrete OZ-disciplined contract
     + a concrete `ValidExecution` trace that violates `SatisfiesCEI`
 
