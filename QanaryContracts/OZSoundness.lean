@@ -629,6 +629,17 @@ function-body conformance — both Session 5 deliverables.
 def oz_guard_prevents_reentrancy_target (C : Contract) : Prop :=
   C.lockedValue ≠ C.unlockedValue → OZGuardDiscipline C → ReentrancyFree C
 
+/-- **Theorem 5 (F2-B generalized form, Phase 5 Session 17 sub-block β-2).**
+    Target Prop for the F2-B reproof of `oz_guard_prevents_reentrancy`.
+    1:1 substitution of `OZGuardDisciplineGeneral` for `OZGuardDiscipline`
+    in the original target. The substantive proof is a trivial
+    corollary (per an internal methodology note §1.5): the
+    `OZGuardDisciplineGeneral` hypothesis is unused, mirroring the
+    original Theorem 5's wrapper structure over `reentrancy_free_universal`. -/
+def oz_guard_prevents_reentrancy_general_target (C : Contract) : Prop :=
+  C.lockedValue ≠ C.unlockedValue →
+    OZGuardDisciplineGeneral C → ReentrancyFree C
+
 /-! ## Phase 4 Session 6 — `theorem5_falsified_by_arbitrary_a` DELETED
 
 Per Ray's Decision 4 (post-Session-4 round): *"When Session 5's
@@ -1683,6 +1694,28 @@ baseline references remain valid (an internal audit transcript,
     *Status:* COMPLETE. -/
 theorem oz_guard_prevents_reentrancy (C : Contract) :
     oz_guard_prevents_reentrancy_target C := by
+  intro h_distinct _h_oz
+  exact reentrancy_free_universal C h_distinct
+
+/-- **Theorem 5 (F2-B generalized form, Phase 5 Session 17 sub-block β-2).**
+    For any contract `C` with distinct lock/unlock values that follows
+    the F2-B *generalized* OpenZeppelin guard discipline
+    (`OZGuardDisciplineGeneral`), `C` is reentrancy-free.
+
+    Trivial corollary of `reentrancy_free_universal` (Theorem 5*),
+    mirroring the original `oz_guard_prevents_reentrancy`'s wrapper
+    structure: the `OZGuardDisciplineGeneral` hypothesis is unused
+    in the proof body, exactly as the original `OZGuardDiscipline`
+    hypothesis is unused in the original wrapper. The headline-theorem
+    layer is body-shape-agnostic via `ReachableTraceOf`'s trace-level
+    abstraction (per an internal methodology note §5), so no
+    parallel `_general` variant of `reentrancy_free_universal` is
+    needed (Option 2-B per Session 17 PROCEED).
+
+    *Status:* COMPLETE (Phase 5 Session 17 sub-block β-2-and-β-3
+    merged). -/
+theorem oz_guard_prevents_reentrancy_general (C : Contract) :
+    oz_guard_prevents_reentrancy_general_target C := by
   intro h_distinct _h_oz
   exact reentrancy_free_universal C h_distinct
 
