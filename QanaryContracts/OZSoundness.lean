@@ -132,6 +132,146 @@ def IsOZGuardedFunction (C : Contract) (f : FunctionBody) : Prop :=
 def OZGuardDiscipline (C : Contract) : Prop :=
   C.functions ≠ [] ∧ ∀ f ∈ C.functions, IsOZGuardedFunction C f
 
+/-! ## F2-B (Phase 5 Session 15) — generalized OZ-guarded predicate
+
+The single-call constraint of `IsOZGuardedFunction` (Phase 4 Session 6
+Decision 5 tightening, line 124-125 above) excludes legitimate
+multi-CALL OZ patterns: batched withdrawals, multi-step settlements,
+nested CALLs. Per Session 14's design enumeration
+(an internal methodology note) and design-level VRVP stress-test
+(an internal VRVP methodology note), candidate **F2-B (single guard span)**
+survives soundness VRVP and provides the cleanest generalization
+path: drop the segmentation-around-the-CALL framing, admit arbitrary
+CALLs in body, retain the W4 strengthening
+(`NoSStoreOnGuardSlotInSteps body`) and lift the per-CALL
+self-call exclusion (`NoCallToSelfInSteps body`).
+
+This section lands the F2-B predicate definition and the subset
+lemma `original_is_general_subset` (paper §4 content). The original
+`IsOZGuardedFunction` is preserved unchanged; coexistence is the
+sub-block β-1 discipline. Sub-block γ confirms infrastructure
+composition before any rename / deprecation of the original.
+
+VRVP at the precise Lean level
+(an internal VRVP methodology note) verified the predicate's
+soundness against three construction attempts matching Session 14's
+design-level VRVP, and verified the F-API-3 self-call rejection
+directly. -/
+
+/-- Predicate: a function-body step list contains no `.call` step
+    whose `callee` equals the given self-address. F2-B
+    (Phase 5 Session 15) per-CALL self-call exclusion helper, parallel
+    to `NoCallInSteps` and `NoSStoreOnGuardSlotInSteps`.
+
+    The original `IsOZGuardedFunction` enforces `callee ≠ C.address`
+    inline for its single CALL. F2-B's body may contain multiple
+    CALLs; the constraint must hold for each, lifted to a list-level
+    predicate. -/
+def NoCallToSelfInSteps (selfAddr : Address)
+    (steps : List FunctionBody.Step) : Prop :=
+  ∀ s ∈ steps, ∀ callee value,
+    s = FunctionBody.Step.call callee value → callee ≠ selfAddr
+
+/-- F2-B generalized OZ-guarded function predicate (single guard span).
+
+    A function body satisfies `IsOZGuardedFunctionGeneral` iff it has
+    the shape
+
+      [sstore guardSlot lockedValue] ++ body
+        ++ [sstore guardSlot unlockedValue, ret true]
+
+    where:
+
+    * `body` may contain arbitrary `.call`, `.sstore` (other slots),
+      `.ret`, `.revert` steps;
+    * `body` contains no `.sstore` on the guard slot
+      (`NoSStoreOnGuardSlotInSteps C.guardSlot body` — W4
+      strengthening inherited);
+    * every `.call` in `body` has `callee ≠ C.address`
+      (`NoCallToSelfInSteps C.address body` — F2-B-specific
+      per-CALL self-call exclusion).
+
+    **Three load-bearing conjuncts:**
+
+    1. *Body shape* (lock-prefix + body + `[unlock, ret true]` suffix):
+       structural anchor; matches an internal methodology note §4.1.
+    2. *No guard SSTOREs in body*: inherits Phase 5 Session 4 W4
+       strengthening; closes the mid-body unlock attack
+       (`adversarial_body_fails_strengthened_oz`).
+    3. *No self-calls in body*: F2-B-specific addition over a naive
+       multi-call generalization; preserves the original predicate's
+       per-CALL `callee ≠ C.address` discipline. Documented as the
+       handshake F-API-3 fix in
+       an internal VRVP methodology note §4. Without this
+       conjunct, the body `[lock, call C.address v, unlock, ret true]`
+       would satisfy the structural and W4 conjuncts but
+       statically permit a self-call inside the guard span,
+       breaking the predicate's intended characterization of
+       OZ-disciplined function bodies.
+
+    **Coverage estimate (per design doc §4.6):** ~95% of production
+    OpenZeppelin v5 `nonReentrant` usage. Acknowledged ~5% gap is
+    pre-CALL guard reset patterns (excluded by W4 strengthening's
+    `NoSStoreOnGuardSlotInSteps`); same gap as the original
+    predicate. Scaffold §11 documents this as a known limitation.
+
+    **Coexistence with original `IsOZGuardedFunction`:** the original
+    is preserved unchanged through sub-block β-1. Sub-block γ
+    propagates the generalized predicate through the three-family
+    infrastructure (CountHelpers, StackHistory, BodyShape) before
+    any rename / deprecation of the original. The
+    `original_is_general_subset` lemma below documents the
+    relationship explicitly. -/
+def IsOZGuardedFunctionGeneral (C : Contract) (f : FunctionBody) : Prop :=
+  ∃ (body : List FunctionBody.Step),
+    f = (FunctionBody.Step.sstore C.guardSlot C.lockedValue) ::
+        (body ++
+          [FunctionBody.Step.sstore C.guardSlot C.unlockedValue,
+           FunctionBody.Step.ret true])
+    ∧ NoSStoreOnGuardSlotInSteps C.guardSlot body
+    ∧ NoCallToSelfInSteps C.address body
+
+/-- The original (Phase 4 Session 6 / Phase 5 Session 4) single-call
+    `IsOZGuardedFunction` is a subset of the F2-B (Phase 5 Session 15)
+    generalized `IsOZGuardedFunctionGeneral`.
+
+    Take `body := pre ++ .call callee value :: post`. The body-shape
+    equation matches by list associativity. The W4 invariant
+    (`NoSStoreOnGuardSlotInSteps`) follows from the original's two
+    `pre`/`post` invariants because the central `.call` step is not
+    an SSTORE. The self-call exclusion (`NoCallToSelfInSteps`)
+    follows because `pre` and `post` have `NoCallInSteps`
+    (no calls at all there), and the central `.call` has
+    `callee ≠ C.address` by hypothesis. -/
+theorem original_is_general_subset (C : Contract) (f : FunctionBody)
+    (h : IsOZGuardedFunction C f) :
+    IsOZGuardedFunctionGeneral C f := by
+  obtain ⟨pre, callee, value, post, h_eq, h_ext, h_no_call_pre,
+          h_no_call_post, h_no_sstore_pre, h_no_sstore_post⟩ := h
+  refine ⟨pre ++ FunctionBody.Step.call callee value :: post, ?_, ?_, ?_⟩
+  · -- Body shape: equal up to list associativity.
+    rw [h_eq]
+    simp [List.append_assoc, List.cons_append]
+  · -- NoSStoreOnGuardSlotInSteps on (pre ++ call :: post).
+    intro s hs
+    rw [List.mem_append, List.mem_cons] at hs
+    rcases hs with hs_pre | rfl | hs_post
+    · exact h_no_sstore_pre s hs_pre
+    · -- s = .call callee value: not an .sstore.
+      rintro ⟨_, h_call_eq⟩
+      cases h_call_eq
+    · exact h_no_sstore_post s hs_post
+  · -- NoCallToSelfInSteps on (pre ++ call :: post).
+    intro s hs callee' value' h_call
+    rw [List.mem_append, List.mem_cons] at hs
+    rcases hs with hs_pre | rfl | hs_post
+    · exact (h_no_call_pre s hs_pre ⟨callee', value', h_call⟩).elim
+    · -- s = .call callee value, h_call : .call callee value = .call callee' value'.
+      simp only [FunctionBody.Step.call.injEq] at h_call
+      obtain ⟨rfl, _⟩ := h_call
+      exact h_ext
+    · exact (h_no_call_post s hs_post ⟨callee', value', h_call⟩).elim
+
 /-! ## Witness for Theorem 4 — a concrete OZ-disciplined contract
     + a concrete `ValidExecution` trace that violates `SatisfiesCEI`
 
