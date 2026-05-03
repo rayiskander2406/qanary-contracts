@@ -272,6 +272,36 @@ theorem original_is_general_subset (C : Contract) (f : FunctionBody)
       exact h_ext
     · exact (h_no_call_post s hs_post ⟨callee', value', h_call⟩).elim
 
+/-- W4 regression-verify (Phase 5 Session 15 Unit 2): F2-B's `body`
+    span satisfies the same `NoSStoreOnGuardSlotInSteps` invariant
+    that Phase 5 Session 4's W4 strengthening originally enforced on
+    the original `IsOZGuardedFunction`'s `pre` / `post` segments.
+
+    Demonstrates that F2-B's generalization does not weaken W4's
+    foundational guarantee: any function body satisfying
+    `IsOZGuardedFunctionGeneral` has a `body` span with no SSTOREs
+    on the guard slot, by the predicate's own definition.
+
+    Stress-tested against three rejection-path bodies from Session 14
+    design-level VRVP (multi-CALL ✓, mid-body guard SSTORE ✓ — fails
+    predicate vacuously, bracket structure violation ✓ — fails
+    predicate vacuously); see commit message for walk-through.
+
+    The W4 wall (Phase 5 Session 4
+    `adversarial_body_fails_strengthened_oz`) is preserved through
+    F2-B generalization. Foundation for Theorem 5 reproof in
+    sub-block β-2 (Sessions 16-17). -/
+theorem f2b_inherits_W4_strengthening (C : Contract) (f : FunctionBody)
+    (h : IsOZGuardedFunctionGeneral C f) :
+    ∃ body : List FunctionBody.Step,
+      f = (FunctionBody.Step.sstore C.guardSlot C.lockedValue) ::
+          (body ++
+            [FunctionBody.Step.sstore C.guardSlot C.unlockedValue,
+             FunctionBody.Step.ret true])
+      ∧ NoSStoreOnGuardSlotInSteps C.guardSlot body := by
+  obtain ⟨body, h_eq, h_no_sstore, _⟩ := h
+  exact ⟨body, h_eq, h_no_sstore⟩
+
 /-! ## Witness for Theorem 4 — a concrete OZ-disciplined contract
     + a concrete `ValidExecution` trace that violates `SatisfiesCEI`
 
