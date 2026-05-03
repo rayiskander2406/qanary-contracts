@@ -61,15 +61,19 @@ jobs:
           set -euo pipefail
           output=$(lake env lean QanaryContracts/PrintAxioms.lean 2>&1)
           expected="depends on axioms: [propext, Classical.choice, Quot.sound]"
-          # Extended Phase 5 Session 13 Unit 3 (F14): now guards all four
+          # Extended Phase 5 Session 13 Unit 3 (F14): guards all
           # post-Layer-4 / Layer 5 headline theorems against axiom drift on
           # every commit. If any of these acquires a wider axiom profile,
-          # CI fails before the change can land.
+          # CI fails before the change can land. Phase 5 Session 17 Unit 4
+          # adds oz_guard_prevents_reentrancy_general (F2-B sub-block
+          # beta-2-and-beta-3 merged) — its axiom record is the canonical
+          # triple by direct delegation to reentrancy_free_universal.
           theorems=(
             "QanaryContracts.oz_guard_prevents_reentrancy"
             "QanaryContracts.reentrancy_free_universal"
             "QanaryContracts.ozGuardDiscipline_implies_RTO"
             "QanaryContracts.no_functions_implies_RFG"
+            "QanaryContracts.oz_guard_prevents_reentrancy_general"
           )
           fail=0
           for thm in "${theorems[@]}"; do
@@ -90,7 +94,7 @@ jobs:
             fi
           done
           if [ "$fail" -ne 0 ]; then exit 1; fi
-          echo "PASS: all four headline theorems carry kernel-only axioms"
+          echo "PASS: all five headline theorems carry kernel-only axioms"
 
       - name: Verify F2-B beta-1 theorem axiom records
         run: |
@@ -134,5 +138,27 @@ jobs:
             fi
           fi
 
+          # Phase 5 Session 17 Unit 4: F2-B sub-block beta-2-and-beta-3
+          # merged foundation. OZGuardDiscipline_implies_general lifts
+          # Session 15's original_is_general_subset pointwise across the
+          # OZGuardDiscipline quantifier; record [propext] confirmed at
+          # runtime per an internal VRVP methodology note best-case
+          # prediction.
+
+          # OZGuardDiscipline_implies_general -> expects [propext] only.
+          line=$(echo "$output" | grep -E "^'QanaryContracts.OZGuardDiscipline_implies_general' " || true)
+          if [ -z "$line" ]; then
+            echo "::error::theorem OZGuardDiscipline_implies_general not found in PrintAxioms output"
+            echo "::error::add a #print axioms entry to QanaryContracts/PrintAxioms.lean"
+            fail=1
+          else
+            echo "$line"
+            if ! echo "$line" | grep -qF "depends on axioms: [propext]"; then
+              echo "::error::OZGuardDiscipline_implies_general axiom set differs from expected"
+              echo "::error::expected: 'depends on axioms: [propext]'"
+              fail=1
+            fi
+          fi
+
           if [ "$fail" -ne 0 ]; then exit 1; fi
-          echo "PASS: F2-B beta-1 theorems carry expected (kernel-subset) axiom records"
+          echo "PASS: F2-B kernel-subset theorems carry expected axiom records"

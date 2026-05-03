@@ -221,3 +221,24 @@ theorem audit_guard_protected_blocks_state_aware :
 -- both theorems remain within the kernel-only allowlist.
 #print axioms QanaryContracts.original_is_general_subset
 #print axioms QanaryContracts.f2b_inherits_W4_strengthening
+
+-- Phase 5 Session 17 Unit 4 (2026-05-04) — F2-B sub-block β-2-and-β-3
+-- merged foundation. Two new theorems added against the generalized
+-- discipline:
+--
+--   * OZGuardDiscipline_implies_general: depends on [propext] only.
+--     Extends Session 15 Unit 3's per-theorem (subset-of-kernel)
+--     audit section.
+--   * oz_guard_prevents_reentrancy_general: depends on the canonical
+--     kernel triple [propext, Classical.choice, Quot.sound] —
+--     propagated from reentrancy_free_universal via direct
+--     delegation. Matches the original oz_guard_prevents_reentrancy's
+--     record exactly. Extends the Session 13 Unit 3 canonical-triple
+--     audit array.
+--
+-- Per an internal VRVP methodology note §4 prediction:
+-- best-case ([propext]) for the implication lemma confirmed at
+-- runtime. Methodology load-bearing claim ("explicit trusted base")
+-- extended to cover sub-block β-2-and-β-3 merged foundation.
+#print axioms QanaryContracts.OZGuardDiscipline_implies_general
+#print axioms QanaryContracts.oz_guard_prevents_reentrancy_general
