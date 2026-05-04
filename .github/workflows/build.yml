@@ -59,7 +59,17 @@ jobs:
       - name: Verify headline theorem axiom set
         run: |
           set -euo pipefail
-          output=$(lake env lean QanaryContracts/PrintAxioms.lean 2>&1)
+          # Lean's #print axioms wraps wide axiom lists across continuation
+          # lines (single space + content). Merge them so the per-theorem
+          # grep below sees one line per theorem regardless of name length.
+          # Phase 5 Session 19: matchesBody_implies_tr_kplus1_eq_lock_general
+          # surfaced the wrap behavior; merge handles it generically.
+          output=$(lake env lean QanaryContracts/PrintAxioms.lean 2>&1 | awk '
+            /^'\''/ { if (acc != "") print acc; acc = $0; next }
+            acc != "" && /^ / { sub(/^[ ]+/, " ", $0); acc = acc $0; next }
+            { if (acc != "") { print acc; acc = "" } ; print }
+            END { if (acc != "") print acc }
+          ')
           expected="depends on axioms: [propext, Classical.choice, Quot.sound]"
           # Extended Phase 5 Session 13 Unit 3 (F14): guards all
           # post-Layer-4 / Layer 5 headline theorems against axiom drift on
@@ -74,6 +84,9 @@ jobs:
             "QanaryContracts.ozGuardDiscipline_implies_RTO"
             "QanaryContracts.no_functions_implies_RFG"
             "QanaryContracts.oz_guard_prevents_reentrancy_general"
+            "QanaryContracts.matchesBody_implies_tr_kplus1_eq_lock_general"
+            "QanaryContracts.lock_position_unique_in_C_frame_general"
+            "QanaryContracts.unlock_position_unique_in_C_frame_general"
           )
           fail=0
           for thm in "${theorems[@]}"; do
@@ -94,12 +107,17 @@ jobs:
             fi
           done
           if [ "$fail" -ne 0 ]; then exit 1; fi
-          echo "PASS: all five headline theorems carry kernel-only axioms"
+          echo "PASS: all eight headline theorems carry kernel-only axioms"
 
       - name: Verify F2-B beta-1 theorem axiom records
         run: |
           set -euo pipefail
-          output=$(lake env lean QanaryContracts/PrintAxioms.lean 2>&1)
+          output=$(lake env lean QanaryContracts/PrintAxioms.lean 2>&1 | awk '
+            /^'\''/ { if (acc != "") print acc; acc = $0; next }
+            acc != "" && /^ / { sub(/^[ ]+/, " ", $0); acc = acc $0; next }
+            { if (acc != "") { print acc; acc = "" } ; print }
+            END { if (acc != "") print acc }
+          ')
           # Phase 5 Session 15 Unit 3: F2-B sub-block beta-1 foundation
           # theorems gated against axiom drift. Both have axiom records
           # strictly narrower than the canonical kernel triple, so the
@@ -162,3 +180,70 @@ jobs:
 
           if [ "$fail" -ne 0 ]; then exit 1; fi
           echo "PASS: F2-B kernel-subset theorems carry expected axiom records"
+
+      - name: Verify F2-B sub-block gamma-1 theorem axiom records
+        run: |
+          set -euo pipefail
+          output=$(lake env lean QanaryContracts/PrintAxioms.lean 2>&1 | awk '
+            /^'\''/ { if (acc != "") print acc; acc = $0; next }
+            acc != "" && /^ / { sub(/^[ ]+/, " ", $0); acc = acc $0; next }
+            { if (acc != "") { print acc; acc = "" } ; print }
+            END { if (acc != "") print acc }
+          ')
+          # Phase 5 Session 19: F2-B sub-block gamma-1 (BodyShape
+          # propagation lemmas). Three theorems with axiom records
+          # narrower than the canonical kernel triple gate here;
+          # the three with the canonical triple are gated in the
+          # headline list above. Per-theorem expected records used
+          # for the narrower set per Session 15's pattern.
+          fail=0
+
+          # unfoldBody_countP_isUnlockStep_eq_one_general -> [propext] only.
+          line=$(echo "$output" | grep -E "^'QanaryContracts.unfoldBody_countP_isUnlockStep_eq_one_general' " || true)
+          if [ -z "$line" ]; then
+            echo "::error::theorem unfoldBody_countP_isUnlockStep_eq_one_general not found in PrintAxioms output"
+            echo "::error::add a #print axioms entry to QanaryContracts/PrintAxioms.lean"
+            fail=1
+          else
+            echo "$line"
+            if ! echo "$line" | grep -qF "depends on axioms: [propext]"; then
+              echo "::error::unfoldBody_countP_isUnlockStep_eq_one_general axiom set differs from expected"
+              echo "::error::expected: 'depends on axioms: [propext]'"
+              fail=1
+            fi
+          fi
+
+          # unfoldBody_countP_isLockStep_eq_one_general -> [propext] only.
+          line=$(echo "$output" | grep -E "^'QanaryContracts.unfoldBody_countP_isLockStep_eq_one_general' " || true)
+          if [ -z "$line" ]; then
+            echo "::error::theorem unfoldBody_countP_isLockStep_eq_one_general not found in PrintAxioms output"
+            echo "::error::add a #print axioms entry to QanaryContracts/PrintAxioms.lean"
+            fail=1
+          else
+            echo "$line"
+            if ! echo "$line" | grep -qF "depends on axioms: [propext]"; then
+              echo "::error::unfoldBody_countP_isLockStep_eq_one_general axiom set differs from expected"
+              echo "::error::expected: 'depends on axioms: [propext]'"
+              fail=1
+            fi
+          fi
+
+          # guard_sstore_value_in_C_frame_general -> [propext, Quot.sound].
+          # Narrower than canonical triple (no Classical.choice).
+          # MATCHES original guard_sstore_value_in_C_frame's record exactly.
+          line=$(echo "$output" | grep -E "^'QanaryContracts.guard_sstore_value_in_C_frame_general' " || true)
+          if [ -z "$line" ]; then
+            echo "::error::theorem guard_sstore_value_in_C_frame_general not found in PrintAxioms output"
+            echo "::error::add a #print axioms entry to QanaryContracts/PrintAxioms.lean"
+            fail=1
+          else
+            echo "$line"
+            if ! echo "$line" | grep -qF "depends on axioms: [propext, Quot.sound]"; then
+              echo "::error::guard_sstore_value_in_C_frame_general axiom set differs from expected"
+              echo "::error::expected: 'depends on axioms: [propext, Quot.sound]'"
+              fail=1
+            fi
+          fi
+
+          if [ "$fail" -ne 0 ]; then exit 1; fi
+          echo "PASS: F2-B sub-block gamma-1 narrower-axiom theorems carry expected records"

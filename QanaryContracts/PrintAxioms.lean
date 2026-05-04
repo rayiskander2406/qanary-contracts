@@ -242,3 +242,36 @@ theorem audit_guard_protected_blocks_state_aware :
 -- extended to cover sub-block β-2-and-β-3 merged foundation.
 #print axioms QanaryContracts.OZGuardDiscipline_implies_general
 #print axioms QanaryContracts.oz_guard_prevents_reentrancy_general
+
+-- Phase 5 Session 19 (2026-05-04) — F2-B sub-block γ-1: BodyShape
+-- propagation lemmas. Six new `_general` variants in BodyShape.lean
+-- accepting IsOZGuardedFunctionGeneral. Co-exist with the original
+-- Category 3 lemmas (BodyShape.lean:80, 390, 420, 453); coexistence
+-- discipline preserved.
+--
+-- Axiom records discovered at runtime:
+--
+--   * unfoldBody_countP_isUnlockStep_eq_one_general    : [propext]
+--   * unfoldBody_countP_isLockStep_eq_one_general      : [propext]
+--   * matchesBody_implies_tr_kplus1_eq_lock_general    : canonical triple
+--   * lock_position_unique_in_C_frame_general          : canonical triple
+--   * unlock_position_unique_in_C_frame_general        : canonical triple
+--   * guard_sstore_value_in_C_frame_general            : [propext, Quot.sound]
+--
+-- All within the kernel-only allowlist. Each MATCHES the corresponding
+-- original lemma's record exactly (where a corresponding original
+-- exists; the two helpers are BodyShape-local path-(α) variants
+-- without direct originals in BodyShape itself, but match their
+-- Layer-4 source lemmas' records).
+--
+-- Per PROCEED-3 path-(α) extension: helpers 2a (lock-counting) and 2b
+-- (kplus1-eq-lock) are BodyShape-local duplicates of CountHelpers /
+-- Executes lemmas, captured as deferred-housekeeping architectural
+-- debt. CI gates protect the helpers' axiom records identically to
+-- the main lemmas.
+#print axioms QanaryContracts.unfoldBody_countP_isUnlockStep_eq_one_general
+#print axioms QanaryContracts.unfoldBody_countP_isLockStep_eq_one_general
+#print axioms QanaryContracts.matchesBody_implies_tr_kplus1_eq_lock_general
+#print axioms QanaryContracts.lock_position_unique_in_C_frame_general
+#print axioms QanaryContracts.unlock_position_unique_in_C_frame_general
+#print axioms QanaryContracts.guard_sstore_value_in_C_frame_general
