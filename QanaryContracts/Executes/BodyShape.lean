@@ -784,4 +784,81 @@ theorem guard_sstore_value_in_C_frame_general
     · -- step = ret-evm: contradiction (sstore ≠ ret).
       cases h_ret
 
+/-! ## Phase 5 Session 21 — Sub-block γ-2: W9 closure under Option (iii)
+
+Three new `_general` artifacts produced (M_general here in BodyShape.lean
+plus L_general; Site 3_general lives in BodyTraceLift.lean). Original
+M (`matchesBody_oz_extracts_positions`, line 279), K
+(`unfoldBody_get?_call`, line 228), L (`unfoldBody_get?_unlock`,
+line 248), N (`c_call_in_C_frame_eq_p_call`, line 345) all preserved
+unchanged per Interpretation B (coexistence). No K_general or
+N_general produced — both deleted-by-omission per Option (iii).
+
+Per an internal reconnaissance note §1.4 specifications + Session 21
+PROCEED authorization. -/
+
+/-- F2-B M_general: scope-restricted body-shape extraction under
+    `IsOZGuardedFunctionGeneral`. Drops CALL-extraction promise per
+    Option (iii); preserves lock/unlock-only existential.
+
+    Coexists with original `matchesBody_oz_extracts_positions`
+    (which retains CALL extraction for the single-CALL setting). -/
+theorem matchesBody_oz_extracts_positions_general
+    (C : Contract)
+    (tr : ExecutionTrace) (q finish : Nat)
+    (caller : Address) (value : Word256)
+    (h_entry : tr[q]? = some (EVMStep.call caller C.address value))
+    (f : FunctionBody) (h_oz : IsOZGuardedFunctionGeneral C f)
+    (h_match : MatchesBody C f tr q finish) :
+    ∃ p_unlock : Nat,
+      q + 1 < p_unlock ∧ p_unlock < finish ∧
+      currentFrameAt tr (q + 1) = some C.address ∧
+      currentFrameAt tr p_unlock = some C.address ∧
+      tr[q + 1]? = some (EVMStep.sstore C.address C.guardSlot C.lockedValue) ∧
+      tr[p_unlock]? = some (EVMStep.sstore C.address C.guardSlot C.unlockedValue) := by
+  have h_tr_q1 : tr[q + 1]? = some (EVMStep.sstore C.address C.guardSlot C.lockedValue) :=
+    matchesBody_implies_tr_kplus1_eq_lock_general
+      C tr q finish caller value h_entry f h_oz h_match
+  obtain ⟨_, h_finish_le_tr, _, _, h_proj⟩ := h_match
+  obtain ⟨body, h_eq, _, _⟩ := h_oz
+  have h_cf_q1 : currentFrameAt tr (q + 1) = some C.address :=
+    currentFrameAt_after_call tr q caller C.address value h_entry
+  -- Inline: (unfoldBody C f)[body.length + 1]? = some unlock SSTORE.
+  -- Structurally what L_general (defined below) exposes; inlined here
+  -- to keep Unit 1 atomic-commit free of forward dependency on Unit 2.
+  have h_unf_unlock : (unfoldBody C f)[body.length + 1]? =
+      some (EVMStep.sstore C.address C.guardSlot C.unlockedValue) := by
+    unfold unfoldBody
+    rw [h_eq]
+    simp only [List.map_cons, List.map_append, liftStep, List.getElem?_cons_succ]
+    rw [List.getElem?_append_right (by simp [List.length_map])]
+    simp [List.length_map]
+  -- Inline: (unfoldBody C f)[0]? = some lock SSTORE.
+  have h_unf_lock : (unfoldBody C f)[0]? =
+      some (EVMStep.sstore C.address C.guardSlot C.lockedValue) := by
+    unfold unfoldBody
+    rw [h_eq]
+    simp [List.map_cons, liftStep]
+  have h_proj_lock : (cFrameProjection C tr (q + 1) finish)[0]? =
+      some (EVMStep.sstore C.address C.guardSlot C.lockedValue) := by
+    rw [h_proj]; exact h_unf_lock
+  have h_proj_unlock : (cFrameProjection C tr (q + 1) finish)[body.length + 1]? =
+      some (EVMStep.sstore C.address C.guardSlot C.unlockedValue) := by
+    rw [h_proj]; exact h_unf_unlock
+  have h_idx_lt : (0 : Nat) < body.length + 1 := Nat.zero_lt_succ _
+  obtain ⟨p_lock, p_unlock, h_plock_pos, h_punlock_pos,
+          h_plock_lt_punlock, _h_tr_plock, h_tr_punlock⟩ :=
+    cFrameProjection_pos_lt_of_index_lt C tr (q + 1) finish h_finish_le_tr
+      0 (body.length + 1) h_idx_lt _ _ h_proj_lock h_proj_unlock
+  have h_punlock_mem := List.mem_of_getElem? h_punlock_pos
+  obtain ⟨_, h_punlock_lt_finish, h_punlock_cf⟩ :=
+    cFrameProjPos_mem_range C tr (q + 1) finish p_unlock h_punlock_mem
+  have h_plock_mem := List.mem_of_getElem? h_plock_pos
+  obtain ⟨h_plock_ge_q1, _, _⟩ :=
+    cFrameProjPos_mem_range C tr (q + 1) finish p_lock h_plock_mem
+  have h_q1_lt_punlock : q + 1 < p_unlock :=
+    lt_of_le_of_lt h_plock_ge_q1 h_plock_lt_punlock
+  exact ⟨p_unlock, h_q1_lt_punlock, h_punlock_lt_finish,
+         h_cf_q1, h_punlock_cf, h_tr_q1, h_tr_punlock⟩
+
 end QanaryContracts
