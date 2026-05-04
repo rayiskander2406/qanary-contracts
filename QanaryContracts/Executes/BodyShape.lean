@@ -724,4 +724,64 @@ theorem unlock_position_unique_in_C_frame_general
     rw [h_proj] at h_count
     omega
 
+/-- F2-B `_general` variant of survey §1.2.Q `guard_sstore_value_in_C_frame`.
+    Proof structure simplified per survey §1.2.Q's projection: 3-segment
+    body decomposition (`lock :: body ++ [unlock, ret]`) rather than the
+    original 4-segment (`lock :: pre ++ call :: post ++ [unlock, ret]`).
+    The central CALL case-discharge of the original is absorbed into the
+    body case (where CALL membership is handled by `liftStep`-simp like
+    any other non-SSTORE body step). Net: one fewer rcases segment. -/
+theorem guard_sstore_value_in_C_frame_general
+    (C : Contract)
+    (tr : ExecutionTrace) (q finish : Nat)
+    (f : FunctionBody) (h_oz : IsOZGuardedFunctionGeneral C f)
+    (h_match : MatchesBody C f tr q finish)
+    (p : Nat) (h_qp : q + 1 ≤ p) (h_pf : p < finish)
+    (h_cf_p : currentFrameAt tr p = some C.address)
+    (v : Word256) (h_sstore : tr[p]? = some (EVMStep.sstore C.address C.guardSlot v)) :
+    v = C.lockedValue ∨ v = C.unlockedValue := by
+  obtain ⟨_, _, _, _, h_proj⟩ := h_match
+  have h_step_in_proj : EVMStep.sstore C.address C.guardSlot v ∈
+      cFrameProjection C tr (q + 1) finish := by
+    unfold cFrameProjection
+    rw [List.mem_filterMap]
+    refine ⟨p, ?_, h_sstore⟩
+    rw [List.mem_filter, List.mem_range']
+    refine ⟨⟨p - (q + 1), by omega, by omega⟩, by simp [h_cf_p]⟩
+  rw [h_proj] at h_step_in_proj
+  obtain ⟨body, h_eq, h_no_sstore_body, _⟩ := h_oz
+  have h_unf : unfoldBody C f =
+      EVMStep.sstore C.address C.guardSlot C.lockedValue ::
+        (body.map (liftStep C) ++
+          [EVMStep.sstore C.address C.guardSlot C.unlockedValue,
+           EVMStep.ret true]) := by
+    unfold unfoldBody
+    rw [h_eq]
+    simp [List.map_cons, List.map_append, liftStep]
+  rw [h_unf] at h_step_in_proj
+  rw [List.mem_cons, List.mem_append, List.mem_map] at h_step_in_proj
+  rcases h_step_in_proj with h_lock | h_body | h_tail
+  · -- step = lock-evm: extract v = lockedValue.
+    injection h_lock with _ _ h_v
+    left; exact h_v
+  · -- ∃ x ∈ body, liftStep C x = sstore-step.
+    obtain ⟨x, h_x_mem, h_x_eq⟩ := h_body
+    cases x with
+    | sstore key val =>
+      simp only [liftStep] at h_x_eq
+      have h_no := h_no_sstore_body (FunctionBody.Step.sstore key val) h_x_mem
+      injection h_x_eq with _ h_key _
+      exact absurd ⟨val, by rw [h_key]⟩ h_no
+    | call _ _ => simp [liftStep] at h_x_eq
+    | ret _ => simp [liftStep] at h_x_eq
+    | revert => simp [liftStep] at h_x_eq
+  · -- step ∈ [unlock-evm, ret-evm].
+    simp only [List.mem_cons, List.not_mem_nil, or_false] at h_tail
+    rcases h_tail with h_unlock | h_ret
+    · -- step = unlock-evm: extract v = unlockedValue.
+      injection h_unlock with _ _ h_v
+      right; exact h_v
+    · -- step = ret-evm: contradiction (sstore ≠ ret).
+      cases h_ret
+
 end QanaryContracts
