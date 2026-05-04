@@ -525,4 +525,43 @@ theorem guard_sstore_value_in_C_frame
       · rw [h_x_ret] at h_x_eq
         simp [liftStep] at h_x_eq
 
+/-! ## Phase 5 Session 19 — Sub-block γ-1: F2-B propagation lemmas
+
+`_general` variants accepting `IsOZGuardedFunctionGeneral` (Session 15
+sub-block β-1's generalized predicate). Co-exist with the original
+Category 3 lemmas above; one-to-one structural correspondence.
+Per an internal methodology note §1.4 four-way classification
++ PROCEED-2 path-(a) adjudication. Category 4 (W9: matchesBody_oz_extracts_positions,
+c_call_in_C_frame_eq_p_call, unfoldBody_get?_call, unfoldBody_get?_unlock)
+explicitly out of scope; Session 20 absorbs.
+-/
+
+/-- F2-B `_general` variant of `unfoldBody_countP_isUnlockStep_eq_one`.
+    Body decomposition is 3-segment (`lock :: body ++ [unlock, ret]`)
+    rather than the original 4-segment (`lock :: pre ++ call :: post ++ [unlock, ret]`);
+    the proof simplifies accordingly — single `body` span feeds
+    `countP_isUnlockStep_map_liftStep_NoSStore`, no central CALL discharge. -/
+theorem unfoldBody_countP_isUnlockStep_eq_one_general
+    (C : Contract) (f : FunctionBody) (h_oz : IsOZGuardedFunctionGeneral C f)
+    (h_distinct : C.lockedValue ≠ C.unlockedValue) :
+    (unfoldBody C f).countP (isUnlockStep C) = 1 := by
+  obtain ⟨body, h_eq, h_no_sstore_body, _⟩ := h_oz
+  unfold unfoldBody
+  rw [h_eq]
+  simp only [List.map_cons, List.map_append, liftStep,
+             List.countP_cons, List.countP_append]
+  rw [countP_isUnlockStep_map_liftStep_NoSStore C body h_no_sstore_body]
+  have h_lock_false :
+      isUnlockStep C (EVMStep.sstore C.address C.guardSlot C.lockedValue) = false := by
+    simp only [isUnlockStep, decide_eq_false_iff_not]
+    intro h_eq_step
+    injection h_eq_step with _ _ h_val
+    exact h_distinct h_val
+  have h_unlock_true :
+      isUnlockStep C (EVMStep.sstore C.address C.guardSlot C.unlockedValue) = true := by
+    simp [isUnlockStep]
+  have h_ret_false : isUnlockStep C (EVMStep.ret true) = false := by simp [isUnlockStep]
+  rw [h_lock_false, h_unlock_true, h_ret_false]
+  simp
+
 end QanaryContracts
