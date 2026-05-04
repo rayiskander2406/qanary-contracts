@@ -221,6 +221,47 @@ theorem cFrameProjection_pos_lt_of_index_lt
   rw [← h_get_i, ← h_get_j]
   exact List.pairwise_iff_getElem.mp h_pw i j h_i_lt_len h_j_lt_len h_lt
 
+/-- Private aux. For `L : List Nat` whose every element is bounded by
+    `tr.length`, `filterMap` with `(fun p => tr[p]?)` preserves length:
+    each lookup returns `some` because the bound rules out the `none`
+    branch. Symmetric to `filterMap_tr_get?_via_pos_aux` (same induction
+    shape; different conclusion). -/
+private theorem filterMap_tr_get?_length_eq_aux
+    (tr : ExecutionTrace) (L : List Nat) (h_all_lt : ∀ p ∈ L, p < tr.length) :
+    (L.filterMap (fun p => tr[p]?)).length = L.length := by
+  induction L with
+  | nil => rfl
+  | cons hd tl ih =>
+    have h_hd_lt : hd < tr.length := h_all_lt hd List.mem_cons_self
+    have h_tl_lt : ∀ p ∈ tl, p < tr.length := fun p hp =>
+      h_all_lt p (List.mem_cons.mpr (Or.inr hp))
+    have h_hd_some : tr[hd]? = some (tr[hd]'h_hd_lt) :=
+      List.getElem?_eq_getElem h_hd_lt
+    rw [List.filterMap_cons, h_hd_some]
+    simp [List.length_cons, ih h_tl_lt]
+
+/-- Length preservation for `cFrameProjection`: under `finish ≤ tr.length`,
+    every position in `cFrameProjPos` lies inside `tr`'s domain, so the
+    underlying `filterMap` collapses no elements. Hoisted as a named helper
+    (path-(α) hoisted-helper variant per
+    an internal project note § Variations) following the
+    Session 21 Unit 3 fallback's identification of this glue fact as
+    architecturally missing. Architectural addition, not debt — names a
+    structural property that no Mathlib lemma exposes.
+
+    Primary consumer: Site 3_general's Strategy B composition for the
+    `k < punlock` derivation in `BodyTraceLift.lean`. -/
+theorem cFrameProjection_length_eq_pos_length
+    (C : Contract) (tr : ExecutionTrace) (start finish : Nat)
+    (h_finish : finish ≤ tr.length) :
+    (cFrameProjection C tr start finish).length =
+      (cFrameProjPos C tr start finish).length := by
+  rw [cFrameProjection_eq_filterMap_pos]
+  apply filterMap_tr_get?_length_eq_aux
+  intro p hp
+  obtain ⟨_, h_lt_finish, _⟩ := cFrameProjPos_mem_range C tr start finish p hp
+  omega
+
 /-! ## Body-index → projection-index identifications -/
 
 /-- `unfoldBody C f` (with the OZ decomposition) at body-index `pre.length + 1`
