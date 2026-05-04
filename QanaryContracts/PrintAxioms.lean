@@ -275,3 +275,41 @@ theorem audit_guard_protected_blocks_state_aware :
 #print axioms QanaryContracts.lock_position_unique_in_C_frame_general
 #print axioms QanaryContracts.unlock_position_unique_in_C_frame_general
 #print axioms QanaryContracts.guard_sstore_value_in_C_frame_general
+
+-- Phase 5 Sessions 21-22 (2026-05-03 / 04) — F2-B sub-block γ-2 closure
+-- (γ-2 + γ-2-residual). Four new `_general` artifacts complete the W9
+-- closure stack at the body-shape extraction layer, allowing
+-- `IsOZGuardedFunctionGeneral`-typed reasoning to traverse from
+-- function-body decomposition through to trace-level guard-locked-during-
+-- body-call claims.
+--
+-- Axiom records discovered at runtime:
+--
+--   * matchesBody_oz_extracts_positions_general              : canonical triple
+--   * unfoldBody_get?_unlock_general                         : canonical triple
+--   * cFrameProjection_length_eq_pos_length                  : [propext, Quot.sound]
+--   * executes_C_guard_locked_during_body_call_general       : canonical triple
+--
+-- All within the kernel-only allowlist. The three canonical-triple
+-- artifacts gate alongside the headline list; the intermediate one
+-- (cFrameProjection_length_eq_pos_length, M-22.2-candidate's "index-bound-
+-- only" tactic category) gates alongside guard_sstore_value_in_C_frame_general.
+--
+-- Session 21 produced M_general (matchesBody_oz_extracts_positions_general)
+-- and L_general (unfoldBody_get?_unlock_general), both as scope-restricted
+-- variants per Option (iii) of the W9 reconnaissance. Session 22 Unit 1
+-- produced cFrameProjection_length_eq_pos_length (path-(α) hoisted-helper
+-- variant — architectural addition closing the glue-fact gap identified
+-- at Session 21 Unit 3 fallback). Session 22 Unit 2 produced Site 3_general
+-- (executes_C_guard_locked_during_body_call_general) consuming the helper
+-- to close the γ-2-residual scope cleanly.
+--
+-- γ closure marker: with these four artifacts the W9 wall is closed at
+-- the body-shape layer; IsOZGuardedFunctionGeneral now traverses
+-- end-to-end from predicate definition (Session 15) through body-shape
+-- extraction (γ-1, γ-2) to trace-level lemmas (γ-2-residual). Original
+-- constructs preserved unchanged per Interpretation B (coexistence).
+#print axioms QanaryContracts.matchesBody_oz_extracts_positions_general
+#print axioms QanaryContracts.unfoldBody_get?_unlock_general
+#print axioms QanaryContracts.cFrameProjection_length_eq_pos_length
+#print axioms QanaryContracts.executes_C_guard_locked_during_body_call_general

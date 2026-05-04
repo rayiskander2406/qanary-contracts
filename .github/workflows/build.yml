@@ -78,6 +78,8 @@ jobs:
           # adds oz_guard_prevents_reentrancy_general (F2-B sub-block
           # beta-2-and-beta-3 merged) — its axiom record is the canonical
           # triple by direct delegation to reentrancy_free_universal.
+          # Phase 5 Sessions 21-22 (gamma-2 + gamma-2-residual): three new
+          # canonical-triple artifacts join the headline gate.
           theorems=(
             "QanaryContracts.oz_guard_prevents_reentrancy"
             "QanaryContracts.reentrancy_free_universal"
@@ -87,12 +89,19 @@ jobs:
             "QanaryContracts.matchesBody_implies_tr_kplus1_eq_lock_general"
             "QanaryContracts.lock_position_unique_in_C_frame_general"
             "QanaryContracts.unlock_position_unique_in_C_frame_general"
+            "QanaryContracts.matchesBody_oz_extracts_positions_general"
+            "QanaryContracts.unfoldBody_get?_unlock_general"
+            "QanaryContracts.executes_C_guard_locked_during_body_call_general"
           )
           fail=0
           for thm in "${theorems[@]}"; do
+            # Escape '?' (allowed in Lean identifiers, e.g.
+            # unfoldBody_get?_unlock_general) so ERE doesn't treat it as
+            # a quantifier. Phase 5 Session 22 Unit 3 gate extension.
+            thm_pat="${thm//\?/\\?}"
             # Anchor the grep to the line beginning with the quoted theorem
             # name to avoid substring collisions.
-            line=$(echo "$output" | grep -E "^'${thm}' " || true)
+            line=$(echo "$output" | grep -E "^'${thm_pat}' " || true)
             if [ -z "$line" ]; then
               echo "::error::theorem ${thm} not found in PrintAxioms output"
               echo "::error::add a #print axioms entry to QanaryContracts/PrintAxioms.lean"
@@ -107,7 +116,7 @@ jobs:
             fi
           done
           if [ "$fail" -ne 0 ]; then exit 1; fi
-          echo "PASS: all eight headline theorems carry kernel-only axioms"
+          echo "PASS: all eleven headline theorems carry kernel-only axioms"
 
       - name: Verify F2-B beta-1 theorem axiom records
         run: |
@@ -245,5 +254,24 @@ jobs:
             fi
           fi
 
+          # Phase 5 Session 22 Unit 1 (gamma-2-residual): cFrameProjection
+          # length-preservation helper. Path-(alpha) hoisted-helper variant
+          # closing the glue-fact gap identified at Session 21 Unit 3
+          # fallback. Axiom record [propext, Quot.sound] (intermediate band
+          # per M-22.2-candidate "index-bound-only" tactic category).
+          line=$(echo "$output" | grep -E "^'QanaryContracts.cFrameProjection_length_eq_pos_length' " || true)
+          if [ -z "$line" ]; then
+            echo "::error::theorem cFrameProjection_length_eq_pos_length not found in PrintAxioms output"
+            echo "::error::add a #print axioms entry to QanaryContracts/PrintAxioms.lean"
+            fail=1
+          else
+            echo "$line"
+            if ! echo "$line" | grep -qF "depends on axioms: [propext, Quot.sound]"; then
+              echo "::error::cFrameProjection_length_eq_pos_length axiom set differs from expected"
+              echo "::error::expected: 'depends on axioms: [propext, Quot.sound]'"
+              fail=1
+            fi
+          fi
+
           if [ "$fail" -ne 0 ]; then exit 1; fi
-          echo "PASS: F2-B sub-block gamma-1 narrower-axiom theorems carry expected records"
+          echo "PASS: F2-B sub-block gamma-1 + gamma-2-residual narrower-axiom theorems carry expected records"
