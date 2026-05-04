@@ -861,4 +861,35 @@ theorem matchesBody_oz_extracts_positions_general
   exact ⟨p_unlock, h_q1_lt_punlock, h_punlock_lt_finish,
          h_cf_q1, h_punlock_cf, h_tr_q1, h_tr_punlock⟩
 
+/-- F2-B L_general: body-indexed unlock-position helper under the
+    `IsOZGuardedFunctionGeneral` 3-segment body decomposition.
+
+    Replaces the original `unfoldBody_get?_unlock`'s
+    `pre.length + post.length + 2` indexing (undefined under
+    multi-CALL bodies) with `body.length + 1` indexing
+    (well-defined for any body shape, including empty).
+
+    Primary consumer: Site 3_general's Strategy B composition
+    (`cFrameProjection_pos_lt_of_index_lt` at indices 0 and
+    `body.length + 1`). M_general (above) inlines this fact rather
+    than invoking L_general to preserve Unit 1 atomic-commit
+    discipline; the inline duplication is captured architectural
+    debt.
+
+    Original `unfoldBody_get?_unlock` (line 248) preserved unchanged. -/
+theorem unfoldBody_get?_unlock_general
+    (C : Contract) (body : List FunctionBody.Step) (f : FunctionBody)
+    (h_eq : f =
+      (FunctionBody.Step.sstore C.guardSlot C.lockedValue) ::
+        (body ++
+          [FunctionBody.Step.sstore C.guardSlot C.unlockedValue,
+           FunctionBody.Step.ret true])) :
+    (unfoldBody C f)[body.length + 1]? =
+      some (EVMStep.sstore C.address C.guardSlot C.unlockedValue) := by
+  unfold unfoldBody
+  rw [h_eq]
+  simp only [List.map_cons, List.map_append, liftStep, List.getElem?_cons_succ]
+  rw [List.getElem?_append_right (by simp [List.length_map])]
+  simp [List.length_map]
+
 end QanaryContracts
