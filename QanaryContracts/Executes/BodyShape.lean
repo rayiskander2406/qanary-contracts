@@ -564,4 +564,125 @@ theorem unfoldBody_countP_isUnlockStep_eq_one_general
   rw [h_lock_false, h_unlock_true, h_ret_false]
   simp
 
+/-- F2-B path-(a) BodyShape-local helper. Counterpart in CountHelpers
+    (`unfoldBody_countP_isLockStep_eq_one`, line 295) takes
+    `IsOZGuardedFunction` and is out of scope for γ-1 modification.
+    This helper proves the same conclusion against
+    `IsOZGuardedFunctionGeneral` directly via the 3-segment body
+    decomposition. Captured as deferred-housekeeping architectural
+    debt: future cleanup should consolidate both predicate variants
+    into a shared module. -/
+theorem unfoldBody_countP_isLockStep_eq_one_general
+    (C : Contract) (f : FunctionBody) (h_oz : IsOZGuardedFunctionGeneral C f)
+    (h_distinct : C.lockedValue ≠ C.unlockedValue) :
+    (unfoldBody C f).countP (isLockStep C) = 1 := by
+  obtain ⟨body, h_eq, h_no_sstore_body, _⟩ := h_oz
+  unfold unfoldBody
+  rw [h_eq]
+  simp only [List.map_cons, List.map_append, liftStep,
+             List.countP_cons, List.countP_append]
+  rw [countP_isLockStep_map_liftStep_NoSStore C body h_no_sstore_body]
+  have h_lock_true :
+      isLockStep C (EVMStep.sstore C.address C.guardSlot C.lockedValue) = true := by
+    simp [isLockStep]
+  have h_unlock_false :
+      isLockStep C (EVMStep.sstore C.address C.guardSlot C.unlockedValue) = false := by
+    simp only [isLockStep, decide_eq_false_iff_not]
+    intro h_eq_step
+    injection h_eq_step with _ _ h_val
+    exact h_distinct h_val.symm
+  have h_ret_false : isLockStep C (EVMStep.ret true) = false := by simp [isLockStep]
+  rw [h_lock_true, h_unlock_false, h_ret_false]
+  simp
+
+/-- F2-B path-(α) BodyShape-local helper. Counterpart in
+    `Executes.lean` (`matchesBody_implies_tr_kplus1_eq_lock`, line 228)
+    takes `IsOZGuardedFunction` and destructures the original's
+    4-segment body shape. This helper proves the same conclusion
+    against `IsOZGuardedFunctionGeneral`'s 3-segment body decomposition.
+    Captured as deferred-housekeeping architectural debt alongside
+    `unfoldBody_countP_isLockStep_eq_one_general`. -/
+theorem matchesBody_implies_tr_kplus1_eq_lock_general
+    (C : Contract) (tr : ExecutionTrace) (k finish : Nat)
+    (caller : Address) (value : Word256)
+    (h_call : tr[k]? = some (EVMStep.call caller C.address value))
+    (f : FunctionBody) (h_oz : IsOZGuardedFunctionGeneral C f)
+    (h_match : MatchesBody C f tr k finish) :
+    tr[k+1]? = some (EVMStep.sstore C.address C.guardSlot C.lockedValue) := by
+  obtain ⟨_, h_fle, _, _, h_proj⟩ := h_match
+  obtain ⟨body, h_eq_body, _, _⟩ := h_oz
+  have h_cf : currentFrameAt tr (k + 1) = some C.address :=
+    currentFrameAt_after_call tr k caller C.address value h_call
+  have h_unf : unfoldBody C f =
+      EVMStep.sstore C.address C.guardSlot C.lockedValue ::
+        (body.map (liftStep C) ++
+          [EVMStep.sstore C.address C.guardSlot C.unlockedValue,
+           EVMStep.ret true]) := by
+    unfold unfoldBody; rw [h_eq_body]
+    simp [List.map_cons, List.map_append, liftStep]
+  have h_unf_head : (unfoldBody C f).head? =
+      some (EVMStep.sstore C.address C.guardSlot C.lockedValue) := by
+    rw [h_unf]; rfl
+  have h_unf_len_ge : (unfoldBody C f).length ≥ 3 := by
+    rw [h_unf]; simp [List.length_cons, List.length_append]
+  have h_proj_len_eq : (cFrameProjection C tr (k+1) finish).length = (unfoldBody C f).length :=
+    by rw [h_proj]
+  have h_range_ge : finish - (k+1) ≥ 3 := by
+    have h_le : (cFrameProjection C tr (k+1) finish).length ≤ finish - (k+1) := by
+      unfold cFrameProjection
+      calc (((List.range' (k+1) (finish - (k+1))).filter
+                (fun p => decide (currentFrameAt tr p = some C.address))).filterMap
+                (fun p => tr[p]?)).length
+          ≤ ((List.range' (k+1) (finish - (k+1))).filter
+                (fun p => decide (currentFrameAt tr p = some C.address))).length :=
+              List.length_filterMap_le _ _
+        _ ≤ (List.range' (k+1) (finish - (k+1))).length := List.length_filter_le _ _
+        _ = finish - (k+1) := List.length_range'
+    rw [h_proj_len_eq] at h_le
+    omega
+  have hk1_lt_fin : k + 1 < finish := by omega
+  have h_some : ∃ s, tr[k+1]? = some s := by
+    have hk1_lt_tr : k + 1 < tr.length := lt_of_lt_of_le hk1_lt_fin h_fle
+    cases h : tr[k+1]? with
+    | none =>
+      rw [List.getElem?_eq_none_iff] at h
+      omega
+    | some s => exact ⟨s, rfl⟩
+  obtain ⟨s, h_s⟩ := h_some
+  have h_proj_head := cFrameProjection_head?_at_kplus1 C tr k finish hk1_lt_fin h_cf s h_s
+  have h_proj_head_eq_unf : (cFrameProjection C tr (k+1) finish).head? =
+      (unfoldBody C f).head? := by rw [h_proj]
+  rw [h_proj_head_eq_unf, h_unf_head] at h_proj_head
+  rw [h_s, h_proj_head]
+
+/-- F2-B `_general` variant of survey §1.2.O `lock_position_unique_in_C_frame`.
+    Proof structure mirrors original (line 390): by_contra, derive
+    h_tr_q1 via the path-(α) helper, count two distinct lock-positions,
+    contradict count = 1 from the path-(a) helper. -/
+theorem lock_position_unique_in_C_frame_general
+    (C : Contract) (h_distinct : C.lockedValue ≠ C.unlockedValue)
+    (tr : ExecutionTrace) (q finish : Nat)
+    (caller : Address) (value : Word256)
+    (h_entry : tr[q]? = some (EVMStep.call caller C.address value))
+    (f : FunctionBody) (h_oz : IsOZGuardedFunctionGeneral C f)
+    (h_match : MatchesBody C f tr q finish)
+    (p : Nat) (h_qp : q + 1 ≤ p) (h_pf : p < finish)
+    (h_cf_p : currentFrameAt tr p = some C.address)
+    (h_sstore : tr[p]? = some (EVMStep.sstore C.address C.guardSlot C.lockedValue)) :
+    p = q + 1 := by
+  by_contra h_ne
+  have h_tr_q1 : tr[q + 1]? = some (EVMStep.sstore C.address C.guardSlot C.lockedValue) :=
+    matchesBody_implies_tr_kplus1_eq_lock_general C tr q finish caller value h_entry f h_oz h_match
+  obtain ⟨_, _, _, _, h_proj⟩ := h_match
+  have h_cf_q1 : currentFrameAt tr (q + 1) = some C.address :=
+    currentFrameAt_after_call tr q caller C.address value h_entry
+  have h_count_eq : (unfoldBody C f).countP (isLockStep C) = 1 :=
+    unfoldBody_countP_isLockStep_eq_one_general C f h_oz h_distinct
+  have h_p_gt_q1 : q + 1 < p := lt_of_le_of_ne h_qp (Ne.symm h_ne)
+  have h_count := cFrameProjection_countP_ge_two C tr (q + 1) finish (isLockStep C)
+    (q + 1) p h_p_gt_q1 (le_refl _) h_pf
+    h_cf_q1 h_cf_p _ _ h_tr_q1 h_sstore (by simp [isLockStep]) (by simp [isLockStep])
+  rw [h_proj] at h_count
+  omega
+
 end QanaryContracts
