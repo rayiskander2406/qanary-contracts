@@ -431,6 +431,227 @@ theorem executes_C_guard_locked_during_body_call
   rw [← h_stable]
   exact h_slot_q2
 
+/-! ## Phase 5 Session 22 — Sub-block γ-2-residual: Site 3_general
+
+`executes_C_guard_locked_during_body_call_general` — `_general` variant
+of L3 (`executes_C_guard_locked_during_body_call`, line 340) under
+`OZGuardDisciplineGeneral`. Coexists with the original L3
+(Interpretation B; original retains CALL-uniqueness identification for
+the single-CALL setting).
+
+Strategy B composition: the `k < punlock` derivation goes through Session
+22 Unit 1's `cFrameProjection_length_eq_pos_length` helper (closing the
+glue-fact gap that fired Session 21's fallback) plus
+`cFrameProjection_get?_via_pos`, `unlock_position_unique_in_C_frame_general`,
+and constructor disjointness on `EVMStep.call`/`EVMStep.ret`/`EVMStep.sstore`.
+
+Per Session 21 fallback's preserved analysis (an internal VRVP methodology note)
++ Session 22 VRVP retry (an internal VRVP methodology note). -/
+
+/-- F2-B Site 3_general: trace-level guard-locked-during-body-call lemma
+    under `OZGuardDisciplineGeneral`. Multi-CALL bodies admitted (the
+    original L3's CALL-uniqueness identification is dropped per
+    Option (iii); `k < punlock` is recovered via Strategy B composition
+    through `cFrameProjection_length_eq_pos_length` + index-extraction
+    chain). -/
+theorem executes_C_guard_locked_during_body_call_general
+    (C : Contract) (h_oz : OZGuardDisciplineGeneral C)
+    (h_distinct : C.lockedValue ≠ C.unlockedValue)
+    (s₀ : EVMState) (tr : ExecutionTrace)
+    (h_exec : executes_C C s₀ tr)
+    (k : Nat) (hk : k < tr.length)
+    (callee : Address) (value : Word256)
+    (h_call : tr[k]? = some (EVMStep.call C.address callee value))
+    (h_cf_k : currentFrameAt tr k = some C.address) :
+    guardSlotAt s₀ tr k C.address C.guardSlot = C.lockedValue := by
+  have h_valid : ValidExecution tr := h_exec.1
+  have h_dispatch : ∀ (k : Nat) (caller : Address) (value : Word256),
+      k < tr.length → tr[k]? = some (EVMStep.call caller C.address value) →
+      ∃ (f : FunctionBody) (finish : Nat),
+        f ∈ C.functions ∧ MatchesBody C f tr k finish := h_exec.2.2
+  have h_so : SStoresInOwnFrame tr := h_valid.1
+  have hk_le : k ≤ tr.length := le_of_lt hk
+  obtain ⟨q, caller_q, value_q, hq_lt_k, h_call_q, h_nest_q⟩ :=
+    c_frame_open_implies_entry C s₀ tr h_exec k hk_le h_cf_k
+  have hq_lt_tr : q < tr.length := lt_trans hq_lt_k hk
+  obtain ⟨f, finish, hf_mem, h_match⟩ := h_dispatch q caller_q value_q hq_lt_tr h_call_q
+  have h_oz_all : ∀ f ∈ C.functions, IsOZGuardedFunctionGeneral C f := h_oz.2
+  have h_isOZ : IsOZGuardedFunctionGeneral C f := h_oz_all f hf_mem
+  have h_q_lt_f : q < finish := h_match.1
+  have h_finish_le_tr : finish ≤ tr.length := h_match.2.1
+  have h_dep_eq : frameDepthAt tr q = frameDepthAt tr finish := h_match.2.2.2.1
+  have hk_lt_finish : k < finish := by
+    by_contra h_ge
+    push Not at h_ge
+    have h_d : finish - q - 1 < k - q := by omega
+    have h_n := h_nest_q ⟨finish - q - 1, h_d⟩
+    have h_pos : q + 1 + (finish - q - 1) = finish := by omega
+    rw [h_pos] at h_n
+    omega
+  have hq1_le_k : q + 1 ≤ k := by omega
+  -- Block F — M_general invocation (replaces original N).
+  obtain ⟨punlock, h_q1_lt_pu, h_pu_lt_f, h_cf_q1, h_cf_pu, h_tr_q1, h_tr_pu⟩ :=
+    matchesBody_oz_extracts_positions_general
+      C tr q finish caller_q value_q h_call_q f h_isOZ h_match
+  -- Block G — Slot at q + 2 = lockedValue (carry-over from original L3).
+  have hq1_lt_tr : q + 1 < tr.length := by omega
+  have h_slot_q2 : guardSlotAt s₀ tr (q + 2) C.address C.guardSlot = C.lockedValue := by
+    unfold guardSlotAt slotAt stateAt evalState
+    have h_take : tr.take (q + 2) = tr.take (q + 1) ++ [tr[q + 1]'hq1_lt_tr] := by
+      rw [show q + 2 = (q + 1) + 1 from rfl, List.take_add_one,
+          List.getElem?_eq_getElem hq1_lt_tr]
+      rfl
+    rw [h_take, List.foldl_append]
+    simp only [List.foldl_cons, List.foldl_nil]
+    have h_step_eq : tr[q + 1]'hq1_lt_tr =
+        EVMStep.sstore C.address C.guardSlot C.lockedValue := by
+      have := h_tr_q1
+      rw [List.getElem?_eq_getElem hq1_lt_tr] at this
+      exact Option.some_inj.mp this
+    rw [h_step_eq]
+    exact applyStep_sstore_lookupSlot_eq _ _ _ _
+  -- Block H pre — Strategy B composition for k < punlock.
+  have h_k_lt_punlock : k < punlock := by
+    by_contra h_not_lt
+    push Not at h_not_lt
+    have h_ne : punlock ≠ k := by
+      intro h_eq
+      rw [← h_eq] at h_call
+      rw [h_call] at h_tr_pu
+      cases h_tr_pu
+    have h_pu_lt_k : punlock < k := lt_of_le_of_ne h_not_lt h_ne
+    -- Save copies of h_isOZ / h_match before destructuring (per
+    -- an internal project note GOTCHA: `obtain` consumes the
+    -- destructured hypothesis, but unlock_position_unique_in_C_frame_general
+    -- needs both unconsumed below).
+    have h_isOZ_save := h_isOZ
+    have h_match_save := h_match
+    obtain ⟨body, h_eq_body, _, _⟩ := h_isOZ
+    have h_unf : unfoldBody C f =
+        EVMStep.sstore C.address C.guardSlot C.lockedValue ::
+          (body.map (liftStep C) ++
+            [EVMStep.sstore C.address C.guardSlot C.unlockedValue,
+             EVMStep.ret true]) := by
+      unfold unfoldBody
+      rw [h_eq_body]
+      simp [List.map_cons, List.map_append, liftStep]
+    have h_unf_len : (unfoldBody C f).length = body.length + 3 := by
+      rw [h_unf]
+      simp [List.length_cons, List.length_append, List.length_map]
+    -- cFrameProjPos.length = body.length + 3 via Unit 1 helper.
+    obtain ⟨_, _, _, _, h_proj⟩ := h_match
+    have h_pos_len : (cFrameProjPos C tr (q + 1) finish).length = body.length + 3 := by
+      rw [← cFrameProjection_length_eq_pos_length C tr (q + 1) finish h_finish_le_tr,
+          h_proj, h_unf_len]
+    -- k ∈ cFrameProjPos.
+    have h_k_in_pos : k ∈ cFrameProjPos C tr (q + 1) finish := by
+      unfold cFrameProjPos
+      rw [List.mem_filter, List.mem_range']
+      refine ⟨⟨k - (q + 1), by omega, by omega⟩, ?_⟩
+      simp [h_cf_k]
+    rw [List.mem_iff_getElem] at h_k_in_pos
+    obtain ⟨m_k, h_m_k_lt, h_pos_m_k⟩ := h_k_in_pos
+    have h_pos_m_k_opt : (cFrameProjPos C tr (q + 1) finish)[m_k]? = some k := by
+      rw [List.getElem?_eq_getElem h_m_k_lt]
+      exact congrArg some h_pos_m_k
+    -- Identify punlock at index body.length + 1.
+    have h_unf_unlock : (unfoldBody C f)[body.length + 1]? =
+        some (EVMStep.sstore C.address C.guardSlot C.unlockedValue) :=
+      unfoldBody_get?_unlock_general C body f h_eq_body
+    have h_proj_unlock : (cFrameProjection C tr (q + 1) finish)[body.length + 1]? =
+        some (EVMStep.sstore C.address C.guardSlot C.unlockedValue) := by
+      rw [h_proj]; exact h_unf_unlock
+    obtain ⟨p_pu, h_p_pu_pos, h_tr_p_pu⟩ :=
+      cFrameProjection_get?_via_pos C tr (q + 1) finish h_finish_le_tr
+        (body.length + 1) _ h_proj_unlock
+    have h_p_pu_mem := List.mem_of_getElem? h_p_pu_pos
+    obtain ⟨h_p_pu_ge, h_p_pu_lt_f, h_cf_p_pu⟩ :=
+      cFrameProjPos_mem_range C tr (q + 1) finish p_pu h_p_pu_mem
+    have h_p_pu_eq : p_pu = punlock :=
+      unlock_position_unique_in_C_frame_general C h_distinct tr q finish
+        f h_isOZ_save h_match_save p_pu punlock (by omega) h_p_pu_lt_f h_cf_p_pu h_tr_p_pu
+        h_q1_lt_pu h_pu_lt_f h_cf_pu h_tr_pu
+    -- Strict monotonicity → m_k > body.length + 1.
+    have h_pw := cFrameProjPos_pairwise_lt C tr (q + 1) finish
+    have h_blen_lt : body.length + 1 < (cFrameProjPos C tr (q + 1) finish).length := by
+      rw [h_pos_len]; omega
+    have h_pos_pu_at : (cFrameProjPos C tr (q + 1) finish)[body.length + 1]? = some punlock := by
+      rw [← h_p_pu_eq]; exact h_p_pu_pos
+    have h_mk_gt : body.length + 1 < m_k := by
+      by_contra h_not_lt
+      push Not at h_not_lt
+      rcases lt_or_eq_of_le h_not_lt with h_lt | h_eq
+      · -- m_k < body.length + 1: cFrameProjPos[m_k] < cFrameProjPos[body.length+1] = punlock.
+        have h_lt' := List.pairwise_iff_getElem.mp h_pw m_k (body.length + 1)
+          h_m_k_lt h_blen_lt h_lt
+        rw [List.getElem?_eq_getElem h_m_k_lt] at h_pos_m_k_opt
+        rw [List.getElem?_eq_getElem h_blen_lt] at h_pos_pu_at
+        have h_lhs := Option.some_inj.mp h_pos_m_k_opt
+        have h_rhs := Option.some_inj.mp h_pos_pu_at
+        rw [h_lhs, h_rhs] at h_lt'
+        omega
+      · -- m_k = body.length + 1: cFrameProjPos[m_k] = punlock = k > punlock.
+        rw [h_eq] at h_pos_m_k_opt
+        rw [h_pos_pu_at] at h_pos_m_k_opt
+        have : k = punlock := (Option.some_inj.mp h_pos_m_k_opt).symm
+        omega
+    have h_mk_lt_total : m_k < body.length + 3 := by rw [← h_pos_len]; exact h_m_k_lt
+    have h_mk_eq : m_k = body.length + 2 := by omega
+    -- Trace step at projection-index body.length + 2 = ret-evm.
+    have h_unf_ret : (unfoldBody C f)[body.length + 2]? = some (EVMStep.ret true) := by
+      rw [h_unf]
+      simp only [List.getElem?_cons_succ]
+      rw [List.getElem?_append_right (by simp [List.length_map])]
+      simp [List.length_map]
+    have h_proj_ret : (cFrameProjection C tr (q + 1) finish)[body.length + 2]? =
+        some (EVMStep.ret true) := by
+      rw [h_proj]; exact h_unf_ret
+    obtain ⟨p_ret, h_p_ret_pos, h_tr_p_ret⟩ :=
+      cFrameProjection_get?_via_pos C tr (q + 1) finish h_finish_le_tr
+        (body.length + 2) _ h_proj_ret
+    -- p_ret = k via cFrameProjPos[body.length + 2] = both.
+    have h_p_ret_eq_k : p_ret = k := by
+      have h_pos_m_k_at_blen2 : (cFrameProjPos C tr (q + 1) finish)[body.length + 2]? = some k := by
+        rw [← h_mk_eq]; exact h_pos_m_k_opt
+      rw [h_p_ret_pos] at h_pos_m_k_at_blen2
+      exact Option.some_inj.mp h_pos_m_k_at_blen2
+    -- Constructor disjointness: tr[k] = call vs tr[p_ret] = ret.
+    rw [h_p_ret_eq_k] at h_tr_p_ret
+    rw [h_call] at h_tr_p_ret
+    cases h_tr_p_ret
+  -- Block H proper — No-SSTOREs in [q + 2, k) (predicate-substituted).
+  have h_no_sstore_pre : ∀ p, q + 2 ≤ p → p < k → ∀ step, tr[p]? = some step →
+      ¬ step.IsSStoreOn C.address C.guardSlot := by
+    intro p h_pge h_plt step h_step ⟨v, h_eq⟩
+    rw [h_eq] at h_step
+    have h_p_lt_tr : p < tr.length := by omega
+    have h_cf_p := h_so ⟨p, h_p_lt_tr⟩ C.address C.guardSlot v h_step
+    have h_v_in : v = C.lockedValue ∨ v = C.unlockedValue :=
+      guard_sstore_value_in_C_frame_general C tr q finish f h_isOZ h_match p
+        (by omega) (by omega) h_cf_p v h_step
+    rcases h_v_in with h_v_lock | h_v_unlock
+    · rw [h_v_lock] at h_step
+      have h_p_eq := lock_position_unique_in_C_frame_general C h_distinct tr q finish
+        caller_q value_q h_call_q f h_isOZ h_match p (by omega) (by omega) h_cf_p h_step
+      omega
+    · rw [h_v_unlock] at h_step
+      have h_p_eq := unlock_position_unique_in_C_frame_general C h_distinct tr q finish
+        f h_isOZ h_match p punlock (by omega) (by omega) h_cf_p h_step
+        h_q1_lt_pu h_pu_lt_f h_cf_pu h_tr_pu
+      omega
+  -- Block I — q + 1 < k via constructor disjointness on h_tr_q1 vs h_call.
+  have hk_gt_q1 : q + 1 < k := by
+    have h_ne : k ≠ q + 1 := by
+      intro h_eq
+      rw [h_eq, h_tr_q1] at h_call
+      cases h_call
+    exact lt_of_le_of_ne hq1_le_k (Ne.symm h_ne)
+  have h_stable := slot_stable_no_sstore s₀ tr C.address C.guardSlot
+    (q + 2) k (by omega) hk_le h_no_sstore_pre
+  unfold guardSlotAt
+  rw [← h_stable]
+  exact h_slot_q2
+
 /-! ## The F4 Lift Theorem -/
 
 /-- **F4 Lift Theorem — `ozGuardDiscipline_implies_RTO`.** Every
