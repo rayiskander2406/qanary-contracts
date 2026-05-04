@@ -685,4 +685,43 @@ theorem lock_position_unique_in_C_frame_general
   rw [h_proj] at h_count
   omega
 
+/-- F2-B `_general` variant of survey §1.2.P `unlock_position_unique_in_C_frame`.
+    Proof structure mirrors original (line 420): by_contra; count = 1
+    via Unit 1's `unfoldBody_countP_isUnlockStep_eq_one_general`;
+    `lt_or_gt_of_ne` to handle both orderings; contradict via
+    `cFrameProjection_countP_ge_two` (Layer-4, predicate-agnostic).
+
+    Vestigial `h_entry`/`caller`/`value` parameters from the original
+    (genuinely unused; source of the BodyShape.lean:424:5 baseline
+    warning) are omitted — the `_general` variant has a cleaner
+    signature with the unused-variable warning eliminated structurally
+    rather than suppressed. -/
+theorem unlock_position_unique_in_C_frame_general
+    (C : Contract) (h_distinct : C.lockedValue ≠ C.unlockedValue)
+    (tr : ExecutionTrace) (q finish : Nat)
+    (f : FunctionBody) (h_oz : IsOZGuardedFunctionGeneral C f)
+    (h_match : MatchesBody C f tr q finish)
+    (p p_unlock : Nat) (h_qp : q + 1 ≤ p) (h_pf : p < finish)
+    (h_cf_p : currentFrameAt tr p = some C.address)
+    (h_sstore : tr[p]? = some (EVMStep.sstore C.address C.guardSlot C.unlockedValue))
+    (h_pu_q1 : q + 1 < p_unlock) (h_pu_f : p_unlock < finish)
+    (h_cf_pu : currentFrameAt tr p_unlock = some C.address)
+    (h_tr_pu : tr[p_unlock]? = some (EVMStep.sstore C.address C.guardSlot C.unlockedValue)) :
+    p = p_unlock := by
+  by_contra h_ne
+  obtain ⟨_, _, _, _, h_proj⟩ := h_match
+  have h_count_eq : (unfoldBody C f).countP (isUnlockStep C) = 1 :=
+    unfoldBody_countP_isUnlockStep_eq_one_general C f h_oz h_distinct
+  rcases lt_or_gt_of_ne h_ne with h_p_lt | h_p_gt
+  · have h_count := cFrameProjection_countP_ge_two C tr (q + 1) finish (isUnlockStep C)
+      p p_unlock h_p_lt h_qp h_pu_f
+      h_cf_p h_cf_pu _ _ h_sstore h_tr_pu (by simp [isUnlockStep]) (by simp [isUnlockStep])
+    rw [h_proj] at h_count
+    omega
+  · have h_count := cFrameProjection_countP_ge_two C tr (q + 1) finish (isUnlockStep C)
+      p_unlock p h_p_gt (by omega) h_pf
+      h_cf_pu h_cf_p _ _ h_tr_pu h_sstore (by simp [isUnlockStep]) (by simp [isUnlockStep])
+    rw [h_proj] at h_count
+    omega
+
 end QanaryContracts
