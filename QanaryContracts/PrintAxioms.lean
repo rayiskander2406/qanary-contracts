@@ -350,3 +350,40 @@ theorem audit_guard_protected_blocks_state_aware :
 -- against either depending on the consumer's predicate hypothesis.
 #print axioms QanaryContracts.executes_C_guard_unlocked_at_entry_general
 #print axioms QanaryContracts.ozGuardDiscipline_implies_RTO_general
+
+-- Phase 5 Session 27 (2026-05-03) — F2 CLOSURE. Sub-block δ-2 substantive.
+-- The substantive `no_external_calls_implies_RFG` sub-case for
+-- ReentrancyFreeGeneral is proven for contracts whose declared functions
+-- contain no Step.call (Option A formulation). The proof is the F2
+-- closure work: the universal soundness theorem for the multi-CALL
+-- setting is structurally complete — predicate (Sessions 14-15), body-
+-- shape soundness (Sessions 17-22), body-to-trace lift (Session 25),
+-- substantive completeness sub-case (this session).
+--
+-- Axiom record discovered at runtime:
+--
+--   * no_external_calls_implies_RFG : canonical kernel triple
+--
+-- Within the kernel-only allowlist. Matching M-22.2 Tier 3 prediction
+-- (existential-bearing tactics with trace projection destructuring +
+-- Mathlib List infrastructure threading via cFrameProjection-via-
+-- MatchesBody body-step identification).
+--
+-- INFRASTRUCTURE-BYPASS: this proof uses operational stack-history
+-- infrastructure (frameDepthAt, currentFrameAt, NestedAfter,
+-- CallsFromTopFrame) plus cFrameProjection-via-MatchesBody — NOT the
+-- W9-closed _general surface (Sessions 19-22) and NOT the F4 lift
+-- layer (Session 25). F2-B completeness sub-cases compose with body-
+-- shape soundness through the eventual oz_completeness_full
+-- disjunction theorem but do not depend on the body-shape _general
+-- infrastructure for their internal reasoning. Architectural
+-- cleanliness preserved.
+--
+-- F2 closure marker: with this artifact, F2 is structurally complete.
+-- Original no_functions_implies_RFG (vacuous foundation, Session 13),
+-- ReentrancyFreeGeneral predicate, NoFunctions predicate, NoExternalCalls
+-- predicate (Unit 1) all preserved alongside the substantive theorem.
+-- Remaining sub-cases (NoSStores, SatisfiesCEI_AllPaths, OZGuardConfig)
+-- and the disjunction theorem oz_completeness_full are post-F2 / Layer 6
+-- instantiation work per program trajectory.
+#print axioms QanaryContracts.no_external_calls_implies_RFG

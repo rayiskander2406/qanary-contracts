@@ -82,6 +82,9 @@ jobs:
           # canonical-triple artifacts join the headline gate.
           # Phase 5 Session 25 (delta-1 closure): two new canonical-triple
           # artifacts close the F4 lift layer under OZGuardDisciplineGeneral.
+          # Phase 5 Session 27 (F2 CLOSURE): no_external_calls_implies_RFG
+          # substantive sub-case completes the multi-CALL universal soundness
+          # theorem structurally.
           theorems=(
             "QanaryContracts.oz_guard_prevents_reentrancy"
             "QanaryContracts.reentrancy_free_universal"
@@ -96,6 +99,7 @@ jobs:
             "QanaryContracts.executes_C_guard_locked_during_body_call_general"
             "QanaryContracts.executes_C_guard_unlocked_at_entry_general"
             "QanaryContracts.ozGuardDiscipline_implies_RTO_general"
+            "QanaryContracts.no_external_calls_implies_RFG"
           )
           fail=0
           for thm in "${theorems[@]}"; do
@@ -120,7 +124,7 @@ jobs:
             fi
           done
           if [ "$fail" -ne 0 ]; then exit 1; fi
-          echo "PASS: all thirteen headline theorems carry kernel-only axioms"
+          echo "PASS: all fourteen headline theorems carry kernel-only axioms"
 
       - name: Verify F2-B beta-1 theorem axiom records
         run: |

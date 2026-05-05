@@ -51,6 +51,31 @@
   the substantive case where `C.functions` is non-empty but no body
   issues an external CALL. That substantive case (`NoExternalCalls`)
   is a strict superset of `NoFunctions` and lands in Sessions 14-21.
+
+  ## F2 closure status (post-Session-27)
+
+  Substantive completeness sub-cases established:
+  * `no_functions_implies_RFG` (line 115) — vacuous foundation
+    (Session 13).
+  * `no_external_calls_implies_RFG` (line ~245) — substantive sub-case
+    via Path (b) NestedAfter induction + cFrameProjection-via-
+    MatchesBody body-step identification (Session 27 F2 closure).
+    Does not invoke the W9-closed `_general` surface; uses operational
+    stack-history infrastructure orthogonal to body-shape soundness.
+
+  Remaining deferred sub-cases (post-F2 work):
+  * `NoSStores` predicate, `no_sstores_implies_RFG` theorem.
+  * `SatisfiesCEI_AllPaths`, `cei_all_paths_implies_RFG`.
+  * `OZGuardConfig`, `oz_guard_config_implies_RFG`.
+  * `oz_completeness_full` disjunction theorem.
+
+  These are full constructive completeness work, scheduled after F2
+  + Layer 6 instantiation per program trajectory.
+
+  **F2 STRUCTURALLY COMPLETE** at Session 27. The multi-CALL universal
+  soundness theorem composes: predicate (Sessions 14-15), body-shape
+  soundness (Sessions 17-22), body-to-trace lift (Session 25),
+  substantive completeness sub-case (Session 27).
 -/
 import QanaryContracts.Contract
 import QanaryContracts.FunctionBody
