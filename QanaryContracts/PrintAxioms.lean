@@ -313,3 +313,40 @@ theorem audit_guard_protected_blocks_state_aware :
 #print axioms QanaryContracts.unfoldBody_get?_unlock_general
 #print axioms QanaryContracts.cFrameProjection_length_eq_pos_length
 #print axioms QanaryContracts.executes_C_guard_locked_during_body_call_general
+
+-- Phase 5 Session 25 (2026-05-03) — F2-B sub-block delta-1 closure.
+-- Two new `_general` artifacts complete the body-to-trace lift under
+-- OZGuardDisciplineGeneral, threading IsOZGuardedFunctionGeneral
+-- end-to-end from body-shape extraction (gamma-1 / gamma-2) to the
+-- F4 lift theorem itself.
+--
+-- Axiom records discovered at runtime:
+--
+--   * executes_C_guard_unlocked_at_entry_general   : canonical triple
+--   * ozGuardDiscipline_implies_RTO_general        : canonical triple
+--
+-- Both within the kernel-only allowlist. Matching M-22.2 Tier 3
+-- prediction (existential-bearing tactics with trace projection
+-- destructuring + classical for Nat.findGreatest decidability +
+-- L2_general / Site 3_general composition).
+--
+-- L2_general (executes_C_guard_unlocked_at_entry_general) is Unit 1's
+-- mechanical adaptation of L2 (line 177) consuming Sessions 19-22
+-- _general variants + S19 path-(alpha) helpers + cFrameProjection_countP
+-- _ge_two as a predicate-free counting helper. Used by F4 lift_general
+-- at Conjunct 3.
+--
+-- F4 lift_general (ozGuardDiscipline_implies_RTO_general) is Unit 2's
+-- six-category adjustment of F4 lift (line 706) composing through
+-- L2_general (Conjunct 3) + Site 3_general (Conjunct 4) + 4-component
+-- IsOZGuardedFunctionGeneral destructure with 3-segment body shape
+-- (Conjunct 5). Original F4 lift preserved unchanged per Interpretation
+-- B coexistence; F4 lift_general delivers the multi-CALL extension that
+-- Layer 5's general completeness theorem will quantify over.
+--
+-- delta-1 closure marker: with these two artifacts the F4 lift layer is
+-- closed under OZGuardDisciplineGeneral; original F4 lift (line 706) and
+-- F4 lift_general coexist; downstream Layer 5 / Layer 6 work can compose
+-- against either depending on the consumer's predicate hypothesis.
+#print axioms QanaryContracts.executes_C_guard_unlocked_at_entry_general
+#print axioms QanaryContracts.ozGuardDiscipline_implies_RTO_general
