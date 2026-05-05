@@ -95,6 +95,24 @@ def ReentrancyFreeGeneral (C : Contract) : Prop :=
     Sessions 14-21. -/
 def NoFunctions (C : Contract) : Prop := C.functions = []
 
+/-! ## Substantive sub-case predicate -/
+
+/-- F2-B substantive (Phase 5 Session 27): a contract whose declared
+    functions contain no `FunctionBody.Step.call` constructors at all.
+    Strict superset of `NoFunctions C` (a contract with no functions
+    trivially has no body containing `.call`); strict subset of "only
+    self-calls allowed" (Option B at Session 26 survey §3.1).
+
+    Per Session 26 survey §3.1 Option A formulation: the strict
+    "no calls at all" form is what makes the body-step-impossibility
+    argument (R3 of the substantive sub-case proof) work — under this
+    predicate, `unfoldBody C f` for any `f ∈ C.functions` contains no
+    `EVMStep.call`, so a trace position carrying a CALL cannot
+    correspond to any body step in any matched `f`. -/
+def NoExternalCalls (C : Contract) : Prop :=
+  ∀ f ∈ C.functions, ∀ step ∈ f, ∀ callee value,
+    step ≠ FunctionBody.Step.call callee value
+
 /-! ## Vacuous foundational sub-case theorem -/
 
 /-- **Vacuous foundational sub-case (1 of 4):** a contract with no
