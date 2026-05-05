@@ -31,19 +31,29 @@
   * Q-VRVP2-4 — lift lives in this new file, not folded into
     `Reachability.lean` or `OZSoundness.lean`.
 
-  This file ships the theorem statement + `sorry` body. Per Ray's
-  Phase 5 Session 4 Step 3 directive (2026-04-28): "Build green with
-  sorry. Report before attempting the proof." The substantive proof
-  spans Sessions 5+, gated by VRVP-3 confirmation.
+  Current contents (post Phase 5 Session 22, sub-block γ closed):
 
-  **R2 note:** this is a deliberate, transient deviation from R2's
-  "never theorem := sorry" rule, authorized by Ray in the Phase 5
-  Session 4 Step 3 directive. The `sorry` body is a typecheck-only
-  placeholder; downstream code that depends on this theorem will
-  inherit the `sorryAx` axiom (the `#print axioms` audit on any
-  downstream theorem will surface that). Sorry will be replaced by
-  tactics in Phase 5 Session 5+ once VRVP-3 succeeds and Ray
-  authorizes proof work.
+  * F4 lift theorem `ozGuardDiscipline_implies_RTO` — substantively
+    proved (no sorry, no axiom). Anchors the body-to-trace lift end
+    of the F4 obligation.
+  * Site 3 (`executes_C_guard_locked_during_body_call`) —
+    original body-call guard-lock site reasoning, preserved per
+    Interpretation B (coexistence with the `_general` variant).
+  * Site 3_general (`executes_C_guard_locked_during_body_call_general`)
+    — Phase 5 Session 22 Unit 2 closure under W9 surface, applying
+    Option (iii) + Strategy B + the Option II hoisted-helper variant
+    of the path-(α) pattern. Consumes `cFrameProjection_length_eq_pos_length`
+    (Phase 5 Session 22 Unit 1, BodyShape.lean) for length-equality
+    threading.
+  * `slot_unlocked_at_finish_of_C_frame` (Lemma B, Family C
+    composition) and surrounding L2/L3 helpers from Phase 5 Session 9.
+
+  Cross-references for the W9 closure path: an internal reconnaissance note
+  (W9 reconnaissance survey; cross-module enumeration per M-19.2),
+  an internal VRVP methodology note (Unit 2 retry record),
+  an internal session report (γ closure 9/9 report). The §10.M-DG
+  consolidation in the internal methodology notes documents the
+  directive-grounding discipline that produced the clean S22 closure.
 -/
 import QanaryContracts.EVM
 import QanaryContracts.Storage

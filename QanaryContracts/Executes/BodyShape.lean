@@ -34,7 +34,6 @@
 -/
 import QanaryContracts.Executes
 import QanaryContracts.Executes.CountHelpers
-import QanaryContracts.Executes.StackHistory
 
 namespace QanaryContracts
 
