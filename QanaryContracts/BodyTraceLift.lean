@@ -1000,4 +1000,158 @@ theorem ozGuardDiscipline_implies_RTO
     -- Combine: tr[k.val + 1]? = head? of projection = head? of unfoldBody = some (sstore lock)
     rw [← h_proj_head_eq, h_proj, h_unf_head]
 
+/-! ## Phase 5 Session 25 — F4 Lift_general: `ozGuardDiscipline_implies_RTO_general`
+
+`_general` variant of F4 lift (line 706) under `OZGuardDisciplineGeneral`,
+composing through L2_general (Unit 1, line 354), Site 3_general
+(Phase 5 Session 22 Unit 2, line 467), and the W9-closed surface
+from Sessions 19-22.
+
+Mechanical adaptation per Session 24 survey §3 six-category
+specification:
+* Hypothesis types: `OZGuardDiscipline` → `OZGuardDisciplineGeneral`.
+* Site 3 invocation (Conjunct 4) → Site 3_general.
+* L2 invocation (Conjunct 3) → L2_general.
+* BodyShape Category 3 invocations: not directly invoked by F4 lift
+  body (absorbed into L2_general / Site 3_general internals).
+* Body-shape decomposition (Conjunct 5): 4-segment → 3-segment via
+  Site 3_general's S22 U2 template at lines 540-547.
+* Auxiliary lemmas: `currentFrameAt_after_call` + Mathlib generic
+  positional helpers carry over directly (predicate-free).
+
+Conjunct 5's destructure adapts from 10-component
+(`pre, callee, val', post, h_eq, ...`) to 4-component
+(`body, h_eq_body, _, _`). The `h_unf_eq` body shape changes from
+4-segment to 3-segment (`lock :: body.map ++ [unlock-step, ret-step]`).
+The `h_f_len` adjusts from `pre.length + post.length + 4` to
+`body.length + 3` and flows through the positional argument
+structurally.
+
+VRVP authored at an internal VRVP methodology note:
+six-category walkthrough + composition stress-test against L2_general
++ five anticipated structural surprises resolution + Strategy
+composition stress-test + hand-construction + M-22.2 axiom record
+prediction (Tier 3 canonical kernel triple).
+
+Coexists with original F4 lift; original preserved unchanged per
+Interpretation B coexistence at the F4 lift layer. Composition with
+Theorem 5* in OZSoundness delivers the body-faithful, OZ-discipline-
+general reentrancy-freeness predicate that Layer 5's completeness
+quantifies over. -/
+
+/-- **F4 Lift_general — `ozGuardDiscipline_implies_RTO_general`.**
+    Multi-CALL extension of F4 lift (line 706) under
+    `OZGuardDisciplineGeneral`. Body-faithful executions of
+    OZ-discipline-general contracts with distinct lock/unlock values
+    are `ReachableTraceOf`-conformant. -/
+theorem ozGuardDiscipline_implies_RTO_general
+    (C : Contract)
+    (h_oz : OZGuardDisciplineGeneral C)
+    (h_distinct : C.lockedValue ≠ C.unlockedValue)
+    (s₀ : EVMState)
+    (tr : ExecutionTrace)
+    (h_exec : executes_C C s₀ tr)
+    (h_no_phantom : NoPhantomCalls C tr) :
+    ReachableTraceOf C s₀ tr := by
+  obtain ⟨h_valid, h_init, h_dispatch⟩ := h_exec
+  refine ⟨h_init, h_valid, ?_, ?_, ?_⟩
+  · -- Conjunct 3 (TraceEntryRevert): direct from L2_general.
+    intro k caller value h_call
+    have hk_lt : k.val < tr.length := k.isLt
+    have h_exec' : executes_C C s₀ tr := ⟨h_valid, h_init, h_dispatch⟩
+    have h_unlocked := executes_C_guard_unlocked_at_entry_general C h_oz h_distinct s₀ tr h_exec'
+      k.val hk_lt caller value h_call
+    rw [h_unlocked]
+    exact h_distinct.symm
+  · -- Conjunct 4 (TraceCCallLocked): Site 3_general in the genuine case;
+    -- phantom CALL case (W8) discharged by NoPhantomCalls antecedent.
+    intro k callee value h_call
+    have hk_lt : k.val < tr.length := k.isLt
+    have h_exec' : executes_C C s₀ tr := ⟨h_valid, h_init, h_dispatch⟩
+    obtain ⟨_, h_calls_from, _⟩ := h_valid
+    have h_disj := h_calls_from k C.address callee value h_call
+    rcases h_disj with h_cf_some | h_cf_none
+    · -- Case 1: currentFrameAt = some C.address. Use Site 3_general.
+      exact executes_C_guard_locked_during_body_call_general C h_oz h_distinct s₀ tr h_exec'
+        k.val hk_lt callee value h_call h_cf_some
+    · -- Case 2: phantom CALL (W8). Discharged via NoPhantomCalls.
+      have h_cf_some : currentFrameAt tr k.val = some C.address :=
+        h_no_phantom k callee value h_call
+      rw [h_cf_none] at h_cf_some
+      exact absurd h_cf_some (by simp)
+  · -- Conjunct 5 (TraceCFrameStartsWithLock): from MatchesBody, adapted
+    -- to IsOZGuardedFunctionGeneral's 4-component destructure + 3-segment
+    -- body shape per Site 3_general's S22 U2 template.
+    intro k caller value h_call
+    have hk_lt : k.val < tr.length := k.isLt
+    obtain ⟨f, finish, hf_mem, h_match⟩ :=
+      h_dispatch k.val caller value hk_lt h_call
+    obtain ⟨_, h_oz_all⟩ := h_oz
+    have h_isOZ : IsOZGuardedFunctionGeneral C f := h_oz_all f hf_mem
+    obtain ⟨body, h_eq_body, _, _⟩ := h_isOZ
+    obtain ⟨h_klt, h_fle, _, _, h_proj⟩ := h_match
+    -- currentFrameAt at k.val + 1 = some C.address.
+    have h_cf : currentFrameAt tr (k.val + 1) = some C.address :=
+      currentFrameAt_after_call tr k.val caller C.address value h_call
+    -- 3-segment body shape.
+    have h_unf_eq :
+        unfoldBody C f =
+          EVMStep.sstore C.address C.guardSlot C.lockedValue ::
+            (body.map (liftStep C) ++
+              [EVMStep.sstore C.address C.guardSlot C.unlockedValue,
+               EVMStep.ret true]) := by
+      unfold unfoldBody
+      rw [h_eq_body]
+      simp [List.map_cons, List.map_append, liftStep]
+    -- f.length = body.length + 3 (3-segment).
+    have h_f_len : f.length = body.length + 3 := by
+      rw [h_eq_body]
+      simp [List.length_cons, List.length_append]
+    have h_unf_len : (unfoldBody C f).length = f.length := by
+      unfold unfoldBody; rw [List.length_map]
+    have h_proj_len : (cFrameProjection C tr (k.val + 1) finish).length = f.length := by
+      rw [h_proj, h_unf_len]
+    have h_range_ge : finish - (k.val + 1) ≥ f.length := by
+      have h_le : (cFrameProjection C tr (k.val + 1) finish).length ≤ finish - (k.val + 1) := by
+        unfold cFrameProjection
+        calc (((List.range' (k.val + 1) (finish - (k.val + 1))).filter
+                  (fun p => decide (currentFrameAt tr p = some C.address))).filterMap
+                  (fun p => tr[p]?)).length
+            ≤ ((List.range' (k.val + 1) (finish - (k.val + 1))).filter
+                  (fun p => decide (currentFrameAt tr p = some C.address))).length :=
+                List.length_filterMap_le _ _
+          _ ≤ (List.range' (k.val + 1) (finish - (k.val + 1))).length :=
+                List.length_filter_le _ _
+          _ = finish - (k.val + 1) := List.length_range'
+      omega
+    have h_range_pos : finish - (k.val + 1) > 0 := by omega
+    have h_kp1_lt_fin : k.val + 1 < finish := by omega
+    have h_kp1_lt_tr : k.val + 1 < tr.length := lt_of_lt_of_le h_kp1_lt_fin h_fle
+    have h_some_get : ∃ s, tr[k.val + 1]? = some s := by
+      cases h_some : tr[k.val + 1]? with
+      | none =>
+        exfalso
+        rw [List.getElem?_eq_none_iff] at h_some
+        omega
+      | some s => exact ⟨s, rfl⟩
+    obtain ⟨s_kp1, h_s_kp1⟩ := h_some_get
+    have h_proj_head_eq : (cFrameProjection C tr (k.val + 1) finish).head?
+        = tr[k.val + 1]? := by
+      unfold cFrameProjection
+      obtain ⟨n, hn⟩ : ∃ n, finish - (k.val + 1) = n + 1 :=
+        ⟨finish - (k.val + 1) - 1, by omega⟩
+      rw [hn]
+      have h_dec : decide (currentFrameAt tr (k.val + 1) = some C.address) = true := by
+        rw [h_cf]; simp
+      show ((((k.val + 1) :: List.range' (k.val + 2) n).filter
+              (fun p => decide (currentFrameAt tr p = some C.address))).filterMap
+              (fun p => tr[p]?)).head? = tr[k.val + 1]?
+      simp only [List.filter_cons, h_dec, if_true, List.filterMap_cons,
+                 h_s_kp1, List.head?_cons]
+    have h_unf_head : (unfoldBody C f).head? =
+        some (EVMStep.sstore C.address C.guardSlot C.lockedValue) := by
+      rw [h_unf_eq]
+      rfl
+    rw [← h_proj_head_eq, h_proj, h_unf_head]
+
 end QanaryContracts
