@@ -604,14 +604,21 @@ theorem unfoldBody_countP_isUnlockStep_eq_one_general
   rw [h_lock_false, h_unlock_true, h_ret_false]
   simp
 
-/-- F2-B path-(a) BodyShape-local helper. Counterpart in CountHelpers
-    (`unfoldBody_countP_isLockStep_eq_one`, line 295) takes
-    `IsOZGuardedFunction` and is out of scope for γ-1 modification.
-    This helper proves the same conclusion against
-    `IsOZGuardedFunctionGeneral` directly via the 3-segment body
-    decomposition. Captured as deferred-housekeeping architectural
-    debt: future cleanup should consolidate both predicate variants
-    into a shared module. -/
+/-- **ARCHITECTURAL DEBT** (Phase 5 Session 19 path-(a); explicit
+    tracking added Session 23 Unit 4 per Option (a)).
+    BodyShape-local duplicate of CountHelpers' lock-counting structure
+    under the generalized `IsOZGuardedFunctionGeneral` predicate.
+    Counterpart `unfoldBody_countP_isLockStep_eq_one`
+    (`Executes/CountHelpers.lean`, line 295) takes the original
+    `IsOZGuardedFunction` and was out of scope for γ-1 modification.
+    Eventual cleanup should lift this lemma to `CountHelpers.lean` as
+    the canonical `_general` variant alongside the original; both
+    predicate variants then share a single module.
+    Tracked in the internal methodology notes DeferredHousekeeping section
+    (entry: path-(α) helper duplication). Resolution candidate:
+    post-F2 Layer-4 refactoring scoped session, likely after Layer 6
+    instantiation stabilizes the cross-module API against named
+    protocols. -/
 theorem unfoldBody_countP_isLockStep_eq_one_general
     (C : Contract) (f : FunctionBody) (h_oz : IsOZGuardedFunctionGeneral C f)
     (h_distinct : C.lockedValue ≠ C.unlockedValue) :
@@ -635,13 +642,20 @@ theorem unfoldBody_countP_isLockStep_eq_one_general
   rw [h_lock_true, h_unlock_false, h_ret_false]
   simp
 
-/-- F2-B path-(α) BodyShape-local helper. Counterpart in
-    `Executes.lean` (`matchesBody_implies_tr_kplus1_eq_lock`, line 228)
-    takes `IsOZGuardedFunction` and destructures the original's
-    4-segment body shape. This helper proves the same conclusion
-    against `IsOZGuardedFunctionGeneral`'s 3-segment body decomposition.
-    Captured as deferred-housekeeping architectural debt alongside
-    `unfoldBody_countP_isLockStep_eq_one_general`. -/
+/-- **ARCHITECTURAL DEBT** (Phase 5 Session 19 path-(α); explicit
+    tracking added Session 23 Unit 4 per Option (a)).
+    BodyShape-local duplicate of Executes' lock-derivation structure
+    under the generalized `IsOZGuardedFunctionGeneral` predicate.
+    Counterpart `matchesBody_implies_tr_kplus1_eq_lock`
+    (`Executes.lean`, line 228) takes the original `IsOZGuardedFunction`
+    and destructures its 4-segment body shape; this helper proves the
+    same conclusion against the 3-segment body decomposition.
+    Eventual cleanup should lift this lemma to `Executes.lean` as
+    the canonical `_general` variant alongside the original.
+    Tracked in the internal methodology notes DeferredHousekeeping section
+    (entry: path-(α) helper duplication; bundled with
+    `unfoldBody_countP_isLockStep_eq_one_general` for a single
+    Layer-4 refactoring session). -/
 theorem matchesBody_implies_tr_kplus1_eq_lock_general
     (C : Contract) (tr : ExecutionTrace) (k finish : Nat)
     (caller : Address) (value : Word256)
