@@ -98,6 +98,17 @@ def daoNewDAO : Address := ⟨5, by decide⟩
     distinct slots or share one (none equal `daoGuardSlot`). -/
 def daoMiscSlot : Word256 := ⟨6, by decide⟩
 
+/-- The `unlockedValue` for `daoContract`'s notional reentrancy guard,
+    chosen per OpenZeppelin v4 convention (`_NOT_ENTERED = 1`). The DAO
+    has no real reentrancy guard; this value is structurally inert for
+    the predicate-rejection witness (the head-element-injectivity
+    argument holds regardless of the concrete value). Session 32 Unit 1. -/
+def daoUnlockedValue : Word256 := ⟨1, by decide⟩
+
+/-- The `lockedValue` for `daoContract`'s notional reentrancy guard,
+    chosen per OpenZeppelin v4 convention (`_ENTERED = 2`). Session 32 Unit 1. -/
+def daoLockedValue : Word256 := ⟨2, by decide⟩
+
 /-! ## `withdrawRewardFor` formalization (Layer 6-A Phase 3, Unit 1) -/
 
 /-- F2-B / Layer 6-A: `withdrawRewardFor` formalization per Session 29
@@ -168,5 +179,38 @@ def splitDAO : FunctionBody :=
    FunctionBody.Step.sstore daoBalancesSlot ⟨0, by decide⟩,
    FunctionBody.Step.sstore daoPaidOutSlot ⟨0, by decide⟩,
    FunctionBody.Step.ret true]
+
+/-! ## DAO Contract definition (Layer 6-A Phase 3 closure, Session 32 Unit 1) -/
+
+/-- F2-B / Layer 6-A Phase 3 closure: the DAO contract definition
+    composing Session 31's `withdrawRewardFor` and `splitDAO` into a
+    `Contract` value matching `QanaryContracts/Contract.lean`'s record
+    signature.
+
+    Field semantics:
+    * `address := daoAddress` (abstract per Phase 5 gap-disclosure;
+      corresponds to historical `0xbb9bc244...`).
+    * `guardSlot := daoGuardSlot` (notional; the DAO has no real
+      reentrancy guard).
+    * `unlockedValue := daoUnlockedValue` and `lockedValue :=
+      daoLockedValue` (OpenZeppelin v4 convention; structurally inert
+      for the predicate-rejection witness).
+    * `functions := [withdrawRewardFor, splitDAO]` (Session 31).
+
+    `OZGuardDisciplineGeneral daoContract` evaluates to `False`:
+    the non-emptiness conjunct holds (`functions ≠ []`), but the
+    universal conjunct fails because both `withdrawRewardFor` and
+    `splitDAO` falsify `IsOZGuardedFunctionGeneral` via
+    head-element-injectivity (Units 2 and 3 produce the formal
+    witnesses; Unit 4 composes them defensively).
+
+    See an internal VRVP methodology note for field-by-field
+    specification and Units 2-3 foundation-discipline check. -/
+def daoContract : Contract :=
+  { address := daoAddress,
+    guardSlot := daoGuardSlot,
+    unlockedValue := daoUnlockedValue,
+    lockedValue := daoLockedValue,
+    functions := [withdrawRewardFor, splitDAO] }
 
 end QanaryContracts
