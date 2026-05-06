@@ -19,6 +19,7 @@ import QanaryContracts.OZSoundness
 import QanaryContracts.BodyTraceLift
 import QanaryContracts.W8
 import QanaryContracts.Completeness
+import QanaryContracts.DAOContract
 
 open QanaryContracts
 
@@ -387,3 +388,10 @@ theorem audit_guard_protected_blocks_state_aware :
 -- and the disjunction theorem oz_completeness_full are post-F2 / Layer 6
 -- instantiation work per program trajectory.
 #print axioms QanaryContracts.no_external_calls_implies_RFG
+
+-- Phase 5 Session 32 (Layer 6-A Phase 3 closure): DAO negative-instance
+-- falsification. Units 2/3 zero-axiom; Unit 4 master [propext]-only.
+-- CI gating deferred to Session 35 Phase 6 per directive Part 14.
+#print axioms QanaryContracts.OZGuardDisciplineGeneral_falsified_at_withdrawRewardFor
+#print axioms QanaryContracts.OZGuardDisciplineGeneral_falsified_at_splitDAO
+#print axioms QanaryContracts.daoContract_violates_OZGuardDisciplineGeneral

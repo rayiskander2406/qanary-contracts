@@ -262,4 +262,47 @@ theorem OZGuardDisciplineGeneral_falsified_at_splitDAO :
   injection h_eq with h_head _
   exact FunctionBody.Step.noConfusion h_head
 
+/-! ## Master rejection theorem (Layer 6-A Phase 3 closure, Session 32 Unit 4) -/
+
+/-- F2-B / Layer 6-A Phase 3 closure master theorem: the DAO contract
+    violates `OZGuardDisciplineGeneral`. The proof composes defensively
+    over both CEI-violation positions per Ray's Session 31 success report
+    adjudication:
+
+    * `withdrawRewardFor:724` (the patched-but-never-deployed June 12
+      violation) — invoked via Unit 2's
+      `OZGuardDisciplineGeneral_falsified_at_withdrawRewardFor`.
+    * `splitDAO:669` (the actually-exploited June 17 violation) —
+      invoked via Unit 3's
+      `OZGuardDisciplineGeneral_falsified_at_splitDAO`.
+
+    Either witness alone suffices for the rejection; defensive
+    composition makes both CEI-violation positions visible at the
+    proof-term layer per the Session 29 survey two-CEI-violations
+    precision finding. The conjunction-pair `⟨h_w_contra, h_s_contra⟩`
+    references both falsifications in the elaborated term; `.1`
+    closes via Unit 2's witness; `.2` would close via Unit 3 equivalently.
+
+    Rejection-named (`daoContract_violates_...`) per Ray's adjudication:
+    the name reads as substantive evidence ("the contract violates the
+    discipline") rather than formal logic; same theorem statement either
+    way, but the substantive name is paper §10 raw material.
+
+    See an internal VRVP methodology note for the
+    defensive-vs-compact tradeoff and full tactic-level reconstruction. -/
+theorem daoContract_violates_OZGuardDisciplineGeneral :
+    ¬ OZGuardDisciplineGeneral daoContract := by
+  rintro ⟨_h_ne, h_all⟩
+  have h_w_mem : withdrawRewardFor ∈ daoContract.functions := by
+    simp [daoContract]
+  have h_s_mem : splitDAO ∈ daoContract.functions := by
+    simp [daoContract]
+  have h_w_contra : False :=
+    OZGuardDisciplineGeneral_falsified_at_withdrawRewardFor
+      (h_all withdrawRewardFor h_w_mem)
+  have h_s_contra : False :=
+    OZGuardDisciplineGeneral_falsified_at_splitDAO
+      (h_all splitDAO h_s_mem)
+  exact (⟨h_w_contra, h_s_contra⟩ : False ∧ False).1
+
 end QanaryContracts
