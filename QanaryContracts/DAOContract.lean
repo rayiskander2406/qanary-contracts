@@ -43,6 +43,120 @@ import QanaryContracts.DAOAttack
 
 namespace QanaryContracts
 
+/-! # DAO 2016 Negative-Instance Certificate — Gap-Disclosure Under Option G
+
+This module formalizes DAO 2016 (`blockchainsllc/DAO` v1.0 tag `982e3c242ee3`,
+deployed at `0xbb9bc244d798123fde783fcc1c72d3bb8c189413` on 2016-04-30) per
+Session 29 survey verbatim Solidity source. The certificate composes
+Phase 3 body-shape evidence (`daoContract_violates_OZGuardDisciplineGeneral`)
+with Phase 4 trace-layer evidence (`dao_attack_is_reentrant`,
+`daoAttackTrace_vulnerability_witness_at_Phase4`) into the discriminating-
+power claim at `daoContract_negative_instance_certificate`.
+
+This documentation is the explicit equivalence-gap disclosure under
+Option G. The disclosure bounds the certificate's transmissibility to
+the deployed contract at the right granularity for paper §10 framing.
+
+## §1 Equivalence-Gap Explicit Framing
+
+The formalization (`QanaryContracts/EVM.lean:37-47`) models a minimal
+4-opcode EVM subset: `sstore`, `call`, `ret`, `revert`. The deployed
+DAO 2016 bytecode executes against the full Frontier/Homestead-era
+EVM specification (Solidity ^0.4.4 compiled bytecode includes
+JUMP/JUMPI/JUMPDEST control-flow, MSTORE/MLOAD memory ops, CALLDATA*
+opcodes, gas opcodes, LOG0-4, plus full SSTORE/CALL/RETURN/REVERT
+gas-and-revert-data semantics). The gap is a deliberate abstraction-
+layer choice (Option G per Session 29 survey Action 1.5.3 + Session 30
+Phase 2 closure: "no EVM model extensions needed"), not an oversight.
+
+## §2 Load-Bearing EVM Feature Enumeration
+
+For each candidate unmodeled feature: structural argument that its
+presence in deployed bytecode does not load-bearingly invalidate
+either the body-shape predicate-rejection or the trace-layer
+vulnerability-witness.
+
+* **CALL variants (CALLCODE, DELEGATECALL, STATICCALL).** Deployed DAO
+  uses CALL.value at load-bearing positions (v1.0:722 `rewardAccount.payOut`).
+  STATICCALL did not exist pre-Byzantium (EIP-214, 2017). NOT load-bearing
+  by deployed-bytecode disassembly.
+
+* **SSTORE gas-refund / slot-zeroing semantics.** The predicate's head-
+  element-injectivity check is purely structural (constructor identity);
+  gas-refund does not alter that. NOT load-bearing.
+
+* **MSTORE / MLOAD memory operations.** Abstracted away at the body-shape
+  grain (Session 31 single-path abstraction collapses pre-CALL local-
+  variable computation). NOT load-bearing — abstracted by design.
+
+* **Control-flow opcodes (JUMP, JUMPI, JUMPDEST).** Single-path abstraction
+  selects the successful execution path through revert-gates (per Session
+  31 VRVP §). The certificate's claim is bounded to that path. NOT load-
+  bearing for the in-scope path.
+
+* **Gas opcodes and gas-exhaustion.** The historical 2016-06-17 attacker
+  completed many reentrancy iterations within block gas limits, demonstrating
+  realizability of the structural property the trace-layer witness encodes.
+  NOT load-bearing — historical realizability resolves the question.
+
+* **CALLDATA* opcodes.** Same abstracted-away argument as MSTORE/MLOAD.
+  NOT load-bearing.
+
+* **LOG0-LOG4 and event emission.** Read-only with respect to storage
+  and control flow; derived form for events. NOT load-bearing.
+
+* **Pre-EIP-2200 SSTORE gas era.** EIP-2200 (Istanbul 2019) reshaped SSTORE
+  gas; DAO predates it. The predicate's argument is structural; gas era
+  is irrelevant. NOT load-bearing.
+
+The non-load-bearing arguments fall into three structural classes:
+(i) historical-instance verifiable absence at load-bearing positions;
+(ii) abstracted away by design at the body-shape grain;
+(iii) read-only or structurally orthogonal to predicate / witness.
+
+## §3 Transmissibility Bound
+
+The discriminating-power claim of `daoContract_negative_instance_certificate`
+transmits to the deployed contract insofar as: (i) deployed CALL operations
+at load-bearing positions are CALL, not its variants; (ii) the abstracted
+body-shape grain captures the predicate-rejection's head-element-injectivity
+argument; (iii) the trace-layer witness's call-graph topology is realized
+in deployed execution; (iv) read-only and structurally-orthogonal unmodeled
+features are not load-bearing for either layer.
+
+The bound is stateable concretely (per §2's eight non-load-bearing arguments)
+without modeling the unmodeled features. Transmissibility scope = abstracted
+body-shape grain + historical-instance trace witness + deployed-bytecode
+disassembly evidence at load-bearing positions.
+
+## §4 Historical-Deployment Referent
+
+| Item | Value |
+|------|-------|
+| Contract address | `0xbb9bc244d798123fde783fcc1c72d3bb8c189413` |
+| Deployment date | 2016-04-30 |
+| Source-of-truth | `blockchainsllc/DAO` tag `982e3c242ee3` (renamed from `slockit/DAO`) |
+| Source date | 2016-04-29 |
+| Solidity version | `^0.4.4` (Frontier/Homestead-era) |
+| Attack date | 2016-06-17 (`splitDAO`-via-`withdrawRewardFor` recursive drain) |
+| Patched (never deployed) | 2016-06-12 (only `withdrawRewardFor:724` patched; `splitDAO:669` exploited) |
+
+The two CEI-violation positions are documented at the pre-import header
+(lines 18-25 above); this section references rather than duplicates.
+
+## §5 Paper §10 Reference
+
+Reviewers citing the certificate's discriminating-power claim
+(`daoContract_negative_instance_certificate`) cite this gap-disclosure
+as the transmissibility-bounds documentation. The bounds make the
+certificate's claim citable at the right granularity for paper §10's
+load-bearing argument: the predicate accurately rejects the historically-
+deployed DAO contract within the abstraction-layer scope §1-§3 establish.
+
+See an internal VRVP methodology note for the full VRVP
+including foundation-discipline check for the Session 35 Phase 6
+audit gate. -/
+
 /-! ## Concrete addresses and storage slots for the DAO 2016 contract
 
     Abstract slot identities consistent with v1.0 Solidity layout
