@@ -234,4 +234,32 @@ theorem OZGuardDisciplineGeneral_falsified_at_withdrawRewardFor :
   injection h_eq with h_head _
   exact FunctionBody.Step.noConfusion h_head
 
+/-! ## Predicate falsification at `splitDAO` (Layer 6-A Phase 3 closure, Session 32 Unit 3) -/
+
+/-- F2-B / Layer 6-A Phase 3 closure: `splitDAO` falsifies
+    `IsOZGuardedFunctionGeneral` via head-element-injectivity. The
+    head step of `splitDAO` (per Session 31 Unit 2) is `.call daoNewDAO 0`
+    (the external CALL at v1.0 line 643 to the newly-created DAO);
+    the predicate's required head element is `.sstore daoContract.guardSlot
+    daoContract.lockedValue`. Constructor disjointness `.call ≠ .sstore`
+    via `FunctionBody.Step.noConfusion` produces `False`.
+
+    Independence from Unit 2 (`withdrawRewardFor` falsification): both
+    theorems operate at the same head-element-injectivity layer but
+    against structurally distinct function bodies (3 steps vs 8 steps,
+    distinct head sub-arguments `daoRewardAccount` vs `daoNewDAO`).
+    Either theorem alone suffices to falsify `OZGuardDisciplineGeneral`
+    daoContract; Unit 4's defensive composition invokes both to make
+    both CEI-violation positions visible at the master theorem layer
+    per the Session 29 survey two-CEI-violations precision finding.
+
+    See an internal VRVP methodology note for the
+    independence verification and parallel four-tactic reconstruction. -/
+theorem OZGuardDisciplineGeneral_falsified_at_splitDAO :
+    ¬ IsOZGuardedFunctionGeneral daoContract splitDAO := by
+  rintro ⟨body, h_eq, _, _⟩
+  unfold splitDAO at h_eq
+  injection h_eq with h_head _
+  exact FunctionBody.Step.noConfusion h_head
+
 end QanaryContracts
