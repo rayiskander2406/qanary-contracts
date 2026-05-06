@@ -38,6 +38,8 @@ import QanaryContracts.FunctionBody
 import QanaryContracts.Step
 import QanaryContracts.EVM
 import QanaryContracts.OZSoundness
+import QanaryContracts.Reentrancy
+import QanaryContracts.DAOAttack
 
 namespace QanaryContracts
 
@@ -326,5 +328,32 @@ theorem daoContract_violates_OZGuardDisciplineGeneral :
 theorem daoContract_predicate_rejected_at_Phase4 :
     ¬ OZGuardDisciplineGeneral daoContract :=
   daoContract_violates_OZGuardDisciplineGeneral
+
+/-! ## Vulnerability-witness invocation wrapper (Layer 6-A Phase 4 opening, Session 33 Unit 2) -/
+
+/-- F2-B / Layer 6-A Phase 4 (Unit 2): trace-layer-into-Phase-4 wrapper
+    for the reentrancy-vulnerability witness. Re-frames DAOAttack.lean's
+    `dao_attack_is_reentrant` (Phase 2 deliverable, 2026-04-26) at the
+    Phase 4 composition layer. The trace-layer evidence (9-step DAO
+    attack trace with witness indices `(daoVictim, 0, 2)`) flows
+    through DAOAttack's existing structural reentrancy proof to this
+    Phase-4 framed restatement, suitable for Unit 3's meta-theorem
+    composition.
+
+    Compose-from-outside discipline: DAOAttack.lean preserved unchanged
+    (Sessions 31-33); the wrapper invokes `dao_attack_is_reentrant`
+    directly via term-mode `:=`. Address-namespace independence
+    preserved at the type layer: the wrapper's subject is
+    `daoAttackTrace` (parametrized over `daoVictim`), distinct from
+    `daoContract`'s `daoAddress`. The discriminating-power linkage to
+    the contract layer is supplied by Unit 3's meta-theorem
+    composition rather than by typed quantification.
+
+    See an internal VRVP methodology note
+    for the compose-from-outside verification + foundation-discipline
+    check for Unit 3. -/
+theorem daoAttackTrace_vulnerability_witness_at_Phase4 :
+    ReentrancyVulnerable daoAttackTrace :=
+  dao_attack_is_reentrant
 
 end QanaryContracts
