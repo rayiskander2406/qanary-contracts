@@ -305,4 +305,26 @@ theorem daoContract_violates_OZGuardDisciplineGeneral :
       (h_all splitDAO h_s_mem)
   exact (⟨h_w_contra, h_s_contra⟩ : False ∧ False).1
 
+/-! ## Predicate-rejection invocation wrapper (Layer 6-A Phase 4 opening, Session 33 Unit 1) -/
+
+/-- F2-B / Layer 6-A Phase 4 (Unit 1): Phase-3-into-Phase-4 wrapper for
+    the contract-layer predicate rejection. Re-frames Session 32 Unit 4's
+    master theorem `daoContract_violates_OZGuardDisciplineGeneral` at
+    the Phase 4 composition layer. The body-shape evidence (two
+    CEI-violation positions: `withdrawRewardFor:724` and `splitDAO:669`)
+    flows through Phase 3's defensive composition to this Phase-4
+    framed restatement, suitable for Unit 3's meta-theorem composition.
+
+    Layer-distinction visibility: Phase 3 closes the body-shape
+    contract-layer evidence; Phase 4 lifts that closure into the
+    negative-instance certificate's composition framing. The wrapper
+    is the structural seam that makes the layer distinction visible
+    at the artifact structure (per directive Part 5 framing).
+
+    See an internal VRVP methodology note for
+    the full VRVP including foundation-discipline check for Unit 3. -/
+theorem daoContract_predicate_rejected_at_Phase4 :
+    ¬ OZGuardDisciplineGeneral daoContract :=
+  daoContract_violates_OZGuardDisciplineGeneral
+
 end QanaryContracts
