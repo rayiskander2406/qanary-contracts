@@ -83,6 +83,21 @@ def daoPaidOutSlot : Word256 := ⟨1, by decide⟩
     June 17 attacker exploited; Unit 2). -/
 def daoBalancesSlot : Word256 := ⟨2, by decide⟩
 
+/-- The newly-created DAO contract that `splitDAO` calls via
+    `p.splitData[0].newDAO.createTokenProxy.value(fundsToBeMoved)(...)`
+    at v1.0 line 643. Distinct from `daoAddress` (the original DAO);
+    this is the fork-target produced by the `splitDAO` proposal. -/
+def daoNewDAO : Address := ⟨5, by decide⟩
+
+/-- Representative storage slot for `splitDAO`'s interim SSTOREs at
+    v1.0 lines 655, 658, 660, 663, 668 (`rewardToken`/`DAOpaidOut`
+    updates for newDAO and self, plus `totalSupply -= balances[msg.sender]`).
+    Collapsed to a single representative slot per Unit 2 VRVP §3
+    single-path abstraction; the predicate's `NoSStoreOnGuardSlotInSteps`
+    evaluates identically regardless of whether these SSTOREs target
+    distinct slots or share one (none equal `daoGuardSlot`). -/
+def daoMiscSlot : Word256 := ⟨6, by decide⟩
+
 /-! ## `withdrawRewardFor` formalization (Layer 6-A Phase 3, Unit 1) -/
 
 /-- F2-B / Layer 6-A: `withdrawRewardFor` formalization per Session 29
@@ -105,6 +120,52 @@ def daoBalancesSlot : Word256 := ⟨2, by decide⟩
     body-shape decomposition and predicate-falsification position. -/
 def withdrawRewardFor : FunctionBody :=
   [FunctionBody.Step.call daoRewardAccount ⟨0, by decide⟩,
+   FunctionBody.Step.sstore daoPaidOutSlot ⟨0, by decide⟩,
+   FunctionBody.Step.ret true]
+
+/-! ## `splitDAO` formalization (Layer 6-A Phase 3, Unit 2) -/
+
+/-- F2-B / Layer 6-A: `splitDAO` formalization per Session 29 survey
+    Action 1.2.1 verbatim Solidity (DAO.sol v1.0 lines 599-672). The
+    body-shape's CEI violation at the position corresponding to
+    Solidity line 669 (`balances[msg.sender] = 0` after the internal
+    call to `withdrawRewardFor`) is what the June 17 2016 attacker
+    exploited.
+
+    Single-path abstraction per Unit 2 VRVP §2 (revert-gates from
+    `noEther`/`onlyTokenholders`/sanity-check elided; "newDAO already
+    exists" branch selected for the conditional CREATE block at lines
+    625-637). Internal-call inlining per VRVP §5 mode (a):
+    `withdrawRewardFor`'s observable steps appear inline at the
+    corresponding-to-Solidity-line-667 position rather than as a
+    symbolic invocation (FunctionBody.Step has no symbolic-invoke
+    constructor by design).
+
+    Body steps (per VRVP §3, 8 steps after LOG3 elision and interim-SSTORE collapse):
+    * `.call daoNewDAO 0`         (line 643: external CALL to newDAO)
+    * `.sstore daoMiscSlot 0`     (lines 655-663: interim SSTOREs collapsed)
+    * `.call daoRewardAccount 0`  (line 667→722: inlined withdrawRewardFor's external CALL)
+    * `.sstore daoPaidOutSlot 0`  (line 667→724: inlined CEI violation 1)
+    * `.sstore daoMiscSlot 0`     (line 668: totalSupply update)
+    * `.sstore daoBalancesSlot 0` (line 669: CEI VIOLATION 2 — attacker-exploited)
+    * `.sstore daoPaidOutSlot 0`  (line 670: paidOut[msg.sender] = 0)
+    * `.ret true`                 (line 671: return true)
+
+    The body's predicate-rejection witness is the head-element-injectivity
+    argument: head step is `.call`, predicate requires `.sstore C.guardSlot
+    C.lockedValue`. Same general principle as `withdrawRewardFor` (Unit 1),
+    but distinct body — both falsifications independently establish
+    `OZGuardDisciplineGeneral` rejection at Session 32.
+
+    DAOAttack.lean composition: complementary not duplicating per VRVP §8;
+    no import of DAOAttack.lean. Address-namespace independent. -/
+def splitDAO : FunctionBody :=
+  [FunctionBody.Step.call daoNewDAO ⟨0, by decide⟩,
+   FunctionBody.Step.sstore daoMiscSlot ⟨0, by decide⟩,
+   FunctionBody.Step.call daoRewardAccount ⟨0, by decide⟩,
+   FunctionBody.Step.sstore daoPaidOutSlot ⟨0, by decide⟩,
+   FunctionBody.Step.sstore daoMiscSlot ⟨0, by decide⟩,
+   FunctionBody.Step.sstore daoBalancesSlot ⟨0, by decide⟩,
    FunctionBody.Step.sstore daoPaidOutSlot ⟨0, by decide⟩,
    FunctionBody.Step.ret true]
 
