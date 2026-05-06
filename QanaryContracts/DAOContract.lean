@@ -157,8 +157,8 @@ deployed DAO contract within the abstraction-layer scope §1-§3 establish.
 
 The CI workflow at `.github/workflows/build.yml` carries a single
 unified `Verify Layer 6-A theorem axiom records` block (added at
-Session 35 Unit 1) gating all six Layer 6-A theorems' kernel-only
-axiom records on every PR / push to main. Coverage: two zero-axiom
+Session 35 Unit 1) gating all six Layer 6-A theorems' kernel-only axiom
+records on every PR / push to main. Coverage: two zero-axiom
 falsifications (Phase 3 head-element-injectivity) plus four
 `[propext]`-only theorems (Phase 3 master + three Phase 4 wrappers/
 meta-theorem). The block follows the Session 19/25/27 awk-merger
