@@ -153,9 +153,51 @@ certificate's claim citable at the right granularity for paper §10's
 load-bearing argument: the predicate accurately rejects the historically-
 deployed DAO contract within the abstraction-layer scope §1-§3 establish.
 
-See an internal VRVP methodology note for the full VRVP
-including foundation-discipline check for the Session 35 Phase 6
-audit gate. -/
+## §6 Audit Gate Verification Scope
+
+The CI workflow at `.github/workflows/build.yml` carries a single
+unified `Verify Layer 6-A theorem axiom records` block (added at
+Session 35 Unit 1) gating all six Layer 6-A theorems' kernel-only
+axiom records on every PR / push to main. Coverage: two zero-axiom
+falsifications (Phase 3 head-element-injectivity) plus four
+`[propext]`-only theorems (Phase 3 master + three Phase 4 wrappers/
+meta-theorem). The block follows the Session 19/25/27 awk-merger
+pattern with per-theorem expected-record gating; drift fails CI
+before the change can land.
+
+## §7 What the Audit Gate Verifies vs Does Not Verify
+
+**Verifies:** that every PR / push to main carries kernel-only axiom
+records for all six Layer 6-A theorems. Drift in any theorem's axiom
+record fails CI. This extends the methodology load-bearing claim
+("explicit trusted base") to Layer 6-A's six theorems uniformly.
+
+**Does not verify:** transmissibility from the formalized 4-opcode EVM
+model to the deployed bytecode at `0xbb9bc244...` (that is documented
+prose at §1-§3); presence or absence of unmodeled features at deployed
+bytecode's load-bearing positions (documented prose at §2 with the
+eight-candidate enumeration); the historical-instance attack
+realizability (documented at §4 plus DAOAttack.lean's
+`dao_attack_is_reentrant` trace-layer witness). The audit gate's
+bounds are exactly the bounds of the formal proof artifacts;
+transmissibility lies outside the gate by design (Option G, §1-§3).
+
+## §8 Unified Layer 6-A Documentation Locus
+
+The documentation locus closes at this module: DAOContract.lean carries
+the contract definition (`daoContract`), the six theorems with their
+docstrings, the gap-disclosure under Option G (§1-§5), and the audit-
+gate documentation (§6-§7). DAOAttack.lean (trace-layer prior work
+boundary) preserved unchanged across Sessions 31-35; the compose-from-
+outside discipline holds. The CI workflow at build.yml carries the
+gating infrastructure. Reviewers reading paper §10 cite this module's
+discriminating-power claim, transmissibility-bounds documentation, and
+audit-gate verification scope at one consolidated location.
+
+See an internal VRVP methodology note (sections §1-§5:
+gap-disclosure under Option G) and
+an internal VRVP methodology note (sections §6-§8: audit-gate
+documentation extension) for the full VRVPs. -/
 
 /-! ## Concrete addresses and storage slots for the DAO 2016 contract
 
