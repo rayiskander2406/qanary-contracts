@@ -37,6 +37,7 @@ import QanaryContracts.Contract
 import QanaryContracts.FunctionBody
 import QanaryContracts.Step
 import QanaryContracts.EVM
+import QanaryContracts.OZSoundness
 
 namespace QanaryContracts
 
@@ -212,5 +213,25 @@ def daoContract : Contract :=
     unlockedValue := daoUnlockedValue,
     lockedValue := daoLockedValue,
     functions := [withdrawRewardFor, splitDAO] }
+
+/-! ## Predicate falsification at `withdrawRewardFor` (Layer 6-A Phase 3 closure, Session 32 Unit 2) -/
+
+/-- F2-B / Layer 6-A Phase 3 closure: `withdrawRewardFor` falsifies
+    `IsOZGuardedFunctionGeneral` via head-element-injectivity. The
+    head step of `withdrawRewardFor` (per Session 31 Unit 1) is
+    `.call daoRewardAccount 0`; the predicate's required head element
+    is `.sstore daoContract.guardSlot daoContract.lockedValue`. By
+    constructor disjointness `.call ≠ .sstore`, no `body` makes the
+    predicate's existential body-shape equation hold.
+
+    See an internal VRVP methodology note for
+    the head-element-injectivity argument and the four-tactic
+    reconstruction (`rintro` → `unfold` → `injection` → `noConfusion`). -/
+theorem OZGuardDisciplineGeneral_falsified_at_withdrawRewardFor :
+    ¬ IsOZGuardedFunctionGeneral daoContract withdrawRewardFor := by
+  rintro ⟨body, h_eq, _, _⟩
+  unfold withdrawRewardFor at h_eq
+  injection h_eq with h_head _
+  exact FunctionBody.Step.noConfusion h_head
 
 end QanaryContracts
