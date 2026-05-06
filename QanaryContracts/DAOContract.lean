@@ -356,4 +356,39 @@ theorem daoAttackTrace_vulnerability_witness_at_Phase4 :
     ReentrancyVulnerable daoAttackTrace :=
   dao_attack_is_reentrant
 
+/-! ## Negative-instance certificate (Layer 6-A Phase 4 closure, Session 33 Unit 3) -/
+
+/-- F2-B / Layer 6-A Phase 4 closure: the DAO contract carries the
+    negative-instance certificate. The trace exhibits reentrancy AND
+    `OZGuardDisciplineGeneral daoContract` is violated; this co-occurrence
+    is the discriminating-power claim — the predicate accurately rejects
+    vulnerable contracts at the historical instance the certificate's
+    load-bearing argument depends on.
+
+    Composition: the two CEI-violation positions visible at Phase 3
+    (`withdrawRewardFor:724`, `splitDAO:669`) are body-shape evidence
+    of the predicate's rejection (right conjunct, via Unit 1 wrapper);
+    DAOAttack.lean's 9-step `daoAttackTrace` with witness indices
+    `(daoVictim, 0, 2)` is trace-layer evidence of actual exploitability
+    (left conjunct, via Unit 2 wrapper). The meta-theorem composes both
+    layers via anonymous constructor.
+
+    Address-namespace independence: the conjunction's left conjunct is
+    over `daoAttackTrace`/`daoVictim ⟨1,_⟩`; the right conjunct is over
+    `daoContract`/`daoAddress ⟨3,_⟩`. The discriminating-power linkage
+    between the two namespaces is documented HERE rather than enforced
+    by typed quantification, per Session 31 splitDAO design choice and
+    Phase 5 Option G gap-disclosure framing. The historical DAO 2016
+    deployment at `0xbb9bc244...` is the singular real-world referent
+    both namespaces abstract; Phase 5 makes that referential structure
+    paper-§10-explicit.
+
+    See an internal VRVP methodology note for the discriminating-
+    power claim's full framing including M-22.2 tier classification. -/
+theorem daoContract_negative_instance_certificate :
+    ReentrancyVulnerable daoAttackTrace ∧
+    ¬ OZGuardDisciplineGeneral daoContract :=
+  ⟨daoAttackTrace_vulnerability_witness_at_Phase4,
+   daoContract_predicate_rejected_at_Phase4⟩
+
 end QanaryContracts

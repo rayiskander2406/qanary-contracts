@@ -395,3 +395,11 @@ theorem audit_guard_protected_blocks_state_aware :
 #print axioms QanaryContracts.OZGuardDisciplineGeneral_falsified_at_withdrawRewardFor
 #print axioms QanaryContracts.OZGuardDisciplineGeneral_falsified_at_splitDAO
 #print axioms QanaryContracts.daoContract_violates_OZGuardDisciplineGeneral
+
+-- Phase 5 Session 33 (Layer 6-A Phase 4 closure): negative-instance
+-- certificate's discriminating-power claim. All three new theorems
+-- carry [propext]-only axiom records (M-22.2 Tier 1). CI gating
+-- defers to Session 35 Phase 6 per Session 32 Unit 4 Option (β) precedent.
+#print axioms QanaryContracts.daoContract_predicate_rejected_at_Phase4
+#print axioms QanaryContracts.daoAttackTrace_vulnerability_witness_at_Phase4
+#print axioms QanaryContracts.daoContract_negative_instance_certificate
