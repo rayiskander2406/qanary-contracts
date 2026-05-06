@@ -283,3 +283,72 @@ jobs:
 
           if [ "$fail" -ne 0 ]; then exit 1; fi
           echo "PASS: F2-B sub-block gamma-1 + gamma-2-residual narrower-axiom theorems carry expected records"
+
+      - name: Verify Layer 6-A theorem axiom records
+        run: |
+          set -euo pipefail
+          output=$(lake env lean QanaryContracts/PrintAxioms.lean 2>&1 | awk '
+            /^'\''/ { if (acc != "") print acc; acc = $0; next }
+            acc != "" && /^ / { sub(/^[ ]+/, " ", $0); acc = acc $0; next }
+            { if (acc != "") { print acc; acc = "" } ; print }
+            END { if (acc != "") print acc }
+          ')
+          # Phase 5 Sessions 32-33 (Layer 6-A Phases 3-4): DAO 2016
+          # negative-instance certificate's six theorems gated against
+          # axiom drift. Two narrower-axiom record patterns coexist:
+          #   - zero-axiom (Phase 3 falsifications S32 U2/U3 — head-element
+          #     injectivity proofs).
+          #   - [propext]-only (Phase 3 master S32 U4 + three Phase 4
+          #     wrappers/meta-theorem S33 U1/U2/U3 — composition layer
+          #     above destructure-burden-absorbing wrappers).
+          # CI gating closes the deferred work from Session 32 Unit 4
+          # Option (β) precedent at the unified Layer 6-A consolidation
+          # layer. The discriminating-power claim
+          # (daoContract_negative_instance_certificate) sits at the meta-
+          # theorem layer composing both phases.
+          fail=0
+
+          zero_axiom_theorems=(
+            "QanaryContracts.OZGuardDisciplineGeneral_falsified_at_withdrawRewardFor"
+            "QanaryContracts.OZGuardDisciplineGeneral_falsified_at_splitDAO"
+          )
+          for thm in "${zero_axiom_theorems[@]}"; do
+            line=$(echo "$output" | grep -E "^'${thm}' " || true)
+            if [ -z "$line" ]; then
+              echo "::error::theorem ${thm} not found in PrintAxioms output"
+              echo "::error::add a #print axioms entry to QanaryContracts/PrintAxioms.lean"
+              fail=1
+              continue
+            fi
+            echo "$line"
+            if ! echo "$line" | grep -qF "does not depend on any axioms"; then
+              echo "::error::${thm} axiom set differs from expected (zero-axiom)"
+              echo "::error::expected: 'does not depend on any axioms'"
+              fail=1
+            fi
+          done
+
+          propext_only_theorems=(
+            "QanaryContracts.daoContract_violates_OZGuardDisciplineGeneral"
+            "QanaryContracts.daoContract_predicate_rejected_at_Phase4"
+            "QanaryContracts.daoAttackTrace_vulnerability_witness_at_Phase4"
+            "QanaryContracts.daoContract_negative_instance_certificate"
+          )
+          for thm in "${propext_only_theorems[@]}"; do
+            line=$(echo "$output" | grep -E "^'${thm}' " || true)
+            if [ -z "$line" ]; then
+              echo "::error::theorem ${thm} not found in PrintAxioms output"
+              echo "::error::add a #print axioms entry to QanaryContracts/PrintAxioms.lean"
+              fail=1
+              continue
+            fi
+            echo "$line"
+            if ! echo "$line" | grep -qF "depends on axioms: [propext]"; then
+              echo "::error::${thm} axiom set differs from expected ([propext]-only)"
+              echo "::error::expected: 'depends on axioms: [propext]'"
+              fail=1
+            fi
+          done
+
+          if [ "$fail" -ne 0 ]; then exit 1; fi
+          echo "PASS: all six Layer 6-A theorems carry expected kernel-only axiom records"
