@@ -116,4 +116,68 @@ theorem cTokenAbstractPattern_isOZGuardedFunctionGeneral
     IsOZGuardedFunctionGeneral C (cTokenAbstractPattern C innerSteps) :=
   ⟨innerSteps, rfl, h_no_sstore, h_no_self_call⟩
 
+/-! ## `transfer` formalization (Layer 6-B Phase 3, Session 38 Unit 2)
+
+    DAO-symmetric subset (Question 6b Option (ii)): cToken's `transfer`
+    function operates against the underlying ERC-20 token, executing
+    a single protected external call within the reentrancy guard span.
+    Mirror to Layer 6-A's `withdrawRewardFor` at structural granularity
+    — minimal external-call function — but with CEI-honoring rather
+    than CEI-violating ordering.
+
+    Body shape (4 steps):
+    * `.sstore compoundGuardSlot compoundLockedValue` — guard engage
+    * `.call underlyingTokenAddress 0`                — protected external call
+    * `.sstore compoundGuardSlot compoundUnlockedValue`— guard disengage
+    * `.ret true`                                      — return success
+
+    Inner content relative to abstract pattern's lock-body-unlock-ret
+    schema (Unit 1 `cTokenAbstractPattern`): single `.call` step.
+    Definitional equality `transfer = cTokenAbstractPattern compoundContract
+    [.call underlyingTokenAddress ⟨0, by decide⟩]` recovered at Unit 3's
+    per-function predicate proof site.
+
+    See an internal VRVP methodology note §1 for the function shape
+    specification and §3 DAO-symmetry mapping. -/
+def transfer : FunctionBody :=
+  [FunctionBody.Step.sstore compoundGuardSlot compoundLockedValue,
+   FunctionBody.Step.call underlyingTokenAddress ⟨0, by decide⟩,
+   FunctionBody.Step.sstore compoundGuardSlot compoundUnlockedValue,
+   FunctionBody.Step.ret true]
+
+/-! ## `transferFrom` formalization (Layer 6-B Phase 3, Session 38 Unit 2)
+
+    DAO-symmetric subset (Question 6b Option (ii)): cToken's
+    `transferFrom` adds the allowance-update state mutation step
+    (representing the ERC-20 allowance state mutation) before the
+    protected external call. Mirror to Layer 6-A's `splitDAO` at
+    structural granularity — longer body with auxiliary state-mutation
+    — but with CEI-honoring rather than CEI-violating ordering of the
+    sstore-vs-call.
+
+    Body shape (5 steps):
+    * `.sstore compoundGuardSlot compoundLockedValue` — guard engage
+    * `.sstore compoundAllowanceSlot 0`               — allowance state mutation
+                                                        (non-guard slot per Unit 1
+                                                        distinctness condition)
+    * `.call underlyingTokenAddress 0`                — protected external call
+    * `.sstore compoundGuardSlot compoundUnlockedValue`— guard disengage
+    * `.ret true`                                      — return success
+
+    Inner content: 2-step inner = allowance SSTORE on
+    `compoundAllowanceSlot` (distinct from `compoundGuardSlot` per Unit 1
+    §3 distinctness condition) followed by the protected CALL.
+    Distinct body from `transfer` — provides the second-function
+    structural witness for Unit 3's master theorem composition over
+    `compoundContract.functions = [transfer, transferFrom]`.
+
+    See an internal VRVP methodology note §2 for the function shape
+    specification and §3 DAO-symmetry mapping. -/
+def transferFrom : FunctionBody :=
+  [FunctionBody.Step.sstore compoundGuardSlot compoundLockedValue,
+   FunctionBody.Step.sstore compoundAllowanceSlot ⟨0, by decide⟩,
+   FunctionBody.Step.call underlyingTokenAddress ⟨0, by decide⟩,
+   FunctionBody.Step.sstore compoundGuardSlot compoundUnlockedValue,
+   FunctionBody.Step.ret true]
+
 end QanaryContracts
