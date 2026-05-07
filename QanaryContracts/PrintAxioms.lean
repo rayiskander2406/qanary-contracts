@@ -20,6 +20,7 @@ import QanaryContracts.BodyTraceLift
 import QanaryContracts.W8
 import QanaryContracts.Completeness
 import QanaryContracts.DAOContract
+import QanaryContracts.CompoundContract
 
 open QanaryContracts
 
@@ -403,3 +404,14 @@ theorem audit_guard_protected_blocks_state_aware :
 #print axioms QanaryContracts.daoContract_predicate_rejected_at_Phase4
 #print axioms QanaryContracts.daoAttackTrace_vulnerability_witness_at_Phase4
 #print axioms QanaryContracts.daoContract_negative_instance_certificate
+
+-- Phase 5 Session 38 (Layer 6-B Phase 3-4 compressed closure):
+-- Compound positive-instance certificate. All three theorems carry
+-- [propext]-only axiom records (M-22.2 Tier 1 wrapper-layer absorption,
+-- third bidirectional empirical instance after Layer 6-A Phase 3 master
+-- and Phase 4 meta-theorem). CI gating at parallel
+-- `Verify Layer 6-B theorem axiom records` block per Question 6d
+-- Option (2) + Naming (a) per-layer scope convention.
+#print axioms QanaryContracts.compoundContract_satisfies_OZGuardDisciplineGeneral
+#print axioms QanaryContracts.compoundContract_predicate_accepted_at_PhaseY
+#print axioms QanaryContracts.compoundContract_positive_instance_certificate

@@ -352,3 +352,55 @@ jobs:
 
           if [ "$fail" -ne 0 ]; then exit 1; fi
           echo "PASS: all six Layer 6-A theorems carry expected kernel-only axiom records"
+
+      - name: Verify Layer 6-B theorem axiom records
+        run: |
+          set -euo pipefail
+          output=$(lake env lean QanaryContracts/PrintAxioms.lean 2>&1 | awk '
+            /^'\''/ { if (acc != "") print acc; acc = $0; next }
+            acc != "" && /^ / { sub(/^[ ]+/, " ", $0); acc = acc $0; next }
+            { if (acc != "") { print acc; acc = "" } ; print }
+            END { if (acc != "") print acc }
+          ')
+          # Phase 5 Session 38 (Layer 6-B Phases 3-4 compressed closure):
+          # Compound v2 cToken positive-instance certificate's three
+          # theorems gated against axiom drift. All three carry
+          # [propext]-only records (M-22.2 Tier 1 wrapper-layer
+          # absorption pattern empirically applied at Layer 6-B —
+          # third bidirectional instance after Layer 6-A Phase 3 master
+          # and Phase 4 meta-theorem). The discriminating-power claim's
+          # positive side closes at the meta-theorem layer
+          # (compoundContract_positive_instance_certificate). Together
+          # with Layer 6-A's negative-instance certificate at the block
+          # above, the bidirectional discriminating-power claim is
+          # structurally grounded — rejection demonstrated at deployed
+          # historical artifact (DAO 2016) plus acceptance demonstrated
+          # at deployed production reference (cDAI's Compound v2 cToken
+          # family at 0x5d3a536e4d6dbd6114cc1ead35777bab948e3643 per
+          # Session 36 closure framing; abstract-pattern-load-bearing
+          # per Question 5d Option (X-prime)).
+          fail=0
+
+          propext_only_theorems=(
+            "QanaryContracts.compoundContract_satisfies_OZGuardDisciplineGeneral"
+            "QanaryContracts.compoundContract_predicate_accepted_at_PhaseY"
+            "QanaryContracts.compoundContract_positive_instance_certificate"
+          )
+          for thm in "${propext_only_theorems[@]}"; do
+            line=$(echo "$output" | grep -E "^'${thm}' " || true)
+            if [ -z "$line" ]; then
+              echo "::error::theorem ${thm} not found in PrintAxioms output"
+              echo "::error::add a #print axioms entry to QanaryContracts/PrintAxioms.lean"
+              fail=1
+              continue
+            fi
+            echo "$line"
+            if ! echo "$line" | grep -qF "depends on axioms: [propext]"; then
+              echo "::error::${thm} axiom set differs from expected ([propext]-only)"
+              echo "::error::expected: 'depends on axioms: [propext]'"
+              fail=1
+            fi
+          done
+
+          if [ "$fail" -ne 0 ]; then exit 1; fi
+          echo "PASS: all three Layer 6-B theorems carry expected [propext]-only axiom records"
