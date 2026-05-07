@@ -180,4 +180,200 @@ def transferFrom : FunctionBody :=
    FunctionBody.Step.sstore compoundGuardSlot compoundUnlockedValue,
    FunctionBody.Step.ret true]
 
+/-! ## `compoundContract` Contract definition (Layer 6-B Phase 3-4, Session 38 Unit 3)
+
+    The cToken contract literal composing transfer and transferFrom from
+    Unit 2 with the helper constants from Unit 1. Field literals support
+    definitional equality with `cTokenAbstractPattern compoundContract <inner>`
+    at per-function predicate proof sites: `compoundContract.guardSlot`
+    reduces to `compoundGuardSlot` via iota; `.lockedValue` to
+    `compoundLockedValue`; `.unlockedValue` to `compoundUnlockedValue`;
+    `.address` to `compoundContractAddress`.
+
+    Two-function literal `[transfer, transferFrom]` mirrors Layer 6-A's
+    `daoContract.functions = [withdrawRewardFor, splitDAO]` two-function
+    structure (Question 6b Option (ii) DAO-symmetric subset). -/
+def compoundContract : Contract :=
+  { address := compoundContractAddress,
+    guardSlot := compoundGuardSlot,
+    unlockedValue := compoundUnlockedValue,
+    lockedValue := compoundLockedValue,
+    functions := [transfer, transferFrom] }
+
+/-! ## Per-function predicate at `transfer` (Layer 6-B Phase 3, Session 38 Unit 3)
+
+    Layer 6-B positive analogue of Layer 6-A's
+    `OZGuardDisciplineGeneral_falsified_at_withdrawRewardFor`. The proof
+    constructs the existential body witness `[.call underlyingTokenAddress 0]`
+    and discharges the two side conditions:
+
+    * `NoSStoreOnGuardSlotInSteps`: vacuous on the single `.call` inner
+      step via constructor disjointness `.call ≠ .sstore`.
+    * `NoCallToSelfInSteps`: holds via `underlyingTokenAddress ≠
+      compoundContractAddress` discharged by `decide`.
+
+    The body-shape equation `transfer = .sstore compoundContract.guardSlot
+    compoundContract.lockedValue :: [.call ...] ++ [.sstore
+    compoundContract.guardSlot compoundContract.unlockedValue, .ret true]`
+    holds by `rfl` via iota reduction on `compoundContract`'s structure
+    literal.
+
+    See an internal VRVP methodology note §1, §2, §4 for the proof tactic
+    strategy and axiom-record projection. -/
+theorem IsOZGuardedFunctionGeneral_at_transfer :
+    IsOZGuardedFunctionGeneral compoundContract transfer := by
+  refine ⟨[FunctionBody.Step.call underlyingTokenAddress ⟨0, by decide⟩], rfl, ?_, ?_⟩
+  · -- NoSStoreOnGuardSlotInSteps
+    intro s hs
+    rintro ⟨val, h⟩
+    cases hs with
+    | head _ => cases h
+    | tail _ h_tail => cases h_tail
+  · -- NoCallToSelfInSteps
+    intro s hs callee value h_call
+    cases hs with
+    | head _ =>
+      injection h_call with h_callee _
+      intro h_addr_eq
+      rw [← h_callee] at h_addr_eq
+      exact absurd h_addr_eq (by decide)
+    | tail _ h_tail => cases h_tail
+
+/-! ## Per-function predicate at `transferFrom` (Layer 6-B Phase 3, Session 38 Unit 3)
+
+    Layer 6-B positive analogue of Layer 6-A's
+    `OZGuardDisciplineGeneral_falsified_at_splitDAO`. The proof constructs
+    the existential body witness `[.sstore compoundAllowanceSlot 0,
+    .call underlyingTokenAddress 0]` (2-step inner) and discharges the
+    two side conditions:
+
+    * `NoSStoreOnGuardSlotInSteps`: case analysis on inner step list.
+      First step `.sstore compoundAllowanceSlot 0` requires
+      `compoundAllowanceSlot ≠ compoundGuardSlot` discharged by `decide`.
+      Second step `.call ...` vacuous via constructor disjointness.
+    * `NoCallToSelfInSteps`: case analysis on inner step list. First
+      step `.sstore ...` vacuous (not a call). Second step `.call ...`
+      via `underlyingTokenAddress ≠ compoundContractAddress` decidable.
+
+    Independence from `IsOZGuardedFunctionGeneral_at_transfer`: both
+    inner lemmas operate at the same predicate-construction layer but
+    against structurally distinct function bodies (4 steps vs 5 steps,
+    1-step inner vs 2-step inner). -/
+theorem IsOZGuardedFunctionGeneral_at_transferFrom :
+    IsOZGuardedFunctionGeneral compoundContract transferFrom := by
+  refine ⟨[FunctionBody.Step.sstore compoundAllowanceSlot ⟨0, by decide⟩,
+           FunctionBody.Step.call underlyingTokenAddress ⟨0, by decide⟩],
+          rfl, ?_, ?_⟩
+  · -- NoSStoreOnGuardSlotInSteps
+    intro s hs
+    rintro ⟨val, h⟩
+    cases hs with
+    | head _ =>
+      -- s = .sstore compoundAllowanceSlot 0; h says s = .sstore guardSlot val
+      injection h with h_slot _
+      exact absurd h_slot (by decide)
+    | tail _ h_tail =>
+      cases h_tail with
+      | head _ => cases h  -- s = .call ...; h says s = .sstore ...
+      | tail _ h_tail2 => cases h_tail2
+  · -- NoCallToSelfInSteps
+    intro s hs callee value h_call
+    cases hs with
+    | head _ => cases h_call  -- s = .sstore ...; h_call says s = .call ...
+    | tail _ h_tail =>
+      cases h_tail with
+      | head _ =>
+        injection h_call with h_callee _
+        intro h_addr_eq
+        rw [← h_callee] at h_addr_eq
+        exact absurd h_addr_eq (by decide)
+      | tail _ h_tail2 => cases h_tail2
+
+/-! ## Master positive-instance theorem (Layer 6-B Phase 3 closure, Session 38 Unit 3)
+
+    F2-B / Layer 6-B Phase 3-4 compressed master theorem: the Compound
+    cToken contract satisfies `OZGuardDisciplineGeneral`. The proof
+    composes per-function predicate inner lemmas via list-membership
+    case analysis at the contract.functions literal:
+
+    * `IsOZGuardedFunctionGeneral_at_transfer` discharges the
+      transfer-membership case.
+    * `IsOZGuardedFunctionGeneral_at_transferFrom` discharges the
+      transferFrom-membership case.
+
+    Acceptance-named (`compoundContract_satisfies_...`) per parallelism
+    with Layer 6-A's rejection-named master (`daoContract_violates_...`):
+    the name reads as substantive evidence ("the contract satisfies the
+    discipline") suitable for paper §10 raw material at the bidirectional
+    discriminating-power claim's positive side.
+
+    Axiom record target: `[propext]`-only (uses `simp [compoundContract]`
+    for membership reduction; mirrors Layer 6-A's master pattern). -/
+theorem compoundContract_satisfies_OZGuardDisciplineGeneral :
+    OZGuardDisciplineGeneral compoundContract := by
+  refine ⟨?_, ?_⟩
+  · -- compoundContract.functions ≠ []
+    simp [compoundContract]
+  · -- ∀ f ∈ functions, IsOZGuardedFunctionGeneral compoundContract f
+    intro f hf
+    simp [compoundContract] at hf
+    rcases hf with rfl | rfl
+    · exact IsOZGuardedFunctionGeneral_at_transfer
+    · exact IsOZGuardedFunctionGeneral_at_transferFrom
+
+/-! ## Predicate-acceptance Phase Y wrapper (Layer 6-B Phase 3-4 compressed, Session 38 Unit 3)
+
+    F2-B / Layer 6-B Phase Y wrapper: re-frames the master theorem
+    `compoundContract_satisfies_OZGuardDisciplineGeneral` at the Layer 6-B
+    Phase Y composition layer. PhaseY is the substantive-completion phase
+    of the compressed Layer 6-B substantive work (Phases 3-4 compressed
+    into Session 38 per Question 6a Option (A)).
+
+    Layer 6-A parallel: `daoContract_predicate_rejected_at_Phase4` —
+    same alias pattern; same `[propext]`-only axiom record inheritance.
+
+    See an internal VRVP methodology note §1 for the wrapper semantics
+    and §3 architectural symmetry mapping. -/
+theorem compoundContract_predicate_accepted_at_PhaseY :
+    OZGuardDisciplineGeneral compoundContract :=
+  compoundContract_satisfies_OZGuardDisciplineGeneral
+
+/-! ## Positive-instance certificate meta-theorem (Layer 6-B Phase 4, Session 38 Unit 3)
+
+    F2-B / Layer 6-B Phase 4 meta-theorem: the bidirectional
+    discriminating-power claim's load-bearing terminus at Layer 6-B's
+    positive-instance side. The certificate witnesses three structural
+    pieces of evidence at the top-level theorem statement:
+
+    1. `OZGuardDisciplineGeneral compoundContract` — the contract-level
+       discipline acceptance (via Phase Y wrapper / master).
+    2. `IsOZGuardedFunctionGeneral compoundContract transfer` — the
+       transfer-function predicate witness.
+    3. `IsOZGuardedFunctionGeneral compoundContract transferFrom` — the
+       transferFrom-function predicate witness.
+
+    Mirrors Layer 6-A's `daoContract_negative_instance_certificate`
+    two-conjunct structure (`¬ RFG daoAttackTrace ∧ ¬ OZGD daoContract`)
+    at structurally inverse direction. Layer 6-B's certificate has three
+    conjuncts because Layer 6-B has no parallel trace artifact (no
+    CompoundAttack.lean per Option (m) compose-from-outside framing); the
+    per-function evidence at meta-theorem layer carries the
+    structural-evidence load that Layer 6-A's trace-witness conjunct carried.
+
+    Together with `daoContract_negative_instance_certificate` from Layer
+    6-A, the bidirectional discriminating-power claim is structurally
+    grounded — rejection demonstrated at deployed historical artifact
+    (DAO 2016) + acceptance demonstrated at deployed production reference
+    (cDAI's Compound v2 cToken family).
+
+    Axiom record target: `[propext]`-only (anonymous constructor over
+    Phase Y wrapper plus two per-function inner lemmas). -/
+theorem compoundContract_positive_instance_certificate :
+    OZGuardDisciplineGeneral compoundContract ∧
+    IsOZGuardedFunctionGeneral compoundContract transfer ∧
+    IsOZGuardedFunctionGeneral compoundContract transferFrom :=
+  ⟨compoundContract_predicate_accepted_at_PhaseY,
+   IsOZGuardedFunctionGeneral_at_transfer,
+   IsOZGuardedFunctionGeneral_at_transferFrom⟩
+
 end QanaryContracts
