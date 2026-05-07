@@ -1,11 +1,39 @@
 /-
   QanaryContracts/CompoundContract.lean
 
-  Layer 6-B Compound positive-instance certificate. Module-level docstring
-  with full compositional context, abstract cToken pattern semantics, cDAI
-  reference exemplar, three-theorem structure, audit-gate scope, and
-  Layer 6-B documentation locus closure is authored at Session 38 Unit 5
-  per directive Part 8 (post-Phase-3-4 substantive completion).
+  Compound v2 cToken Positive-Instance Certificate (Layer 6-B Phase 3-4).
+
+  Per Session 37 reconnaissance survey (an internal reconnaissance note)
+  Compound v2 cToken family pattern from `compound-finance/compound-protocol`
+  with cDAI as canonical exemplar, deployed at
+  `0x5d3a536e4d6dbd6114cc1ead35777bab948e3643`.
+
+  Per Question 5d Option (X-prime) confirmation: load-bearing positive-instance
+  argument transmits at the abstract `CToken.sol` pattern layer with cDAI as
+  exemplar (broader claim scope than deployed-bytecode-specific framing). The
+  numeric standin `compoundContractAddress := ⟨7, decide⟩` represents cDAI at
+  the abstract pattern layer.
+
+  Formalizes the abstract cToken pattern (`cTokenAbstractPattern`) plus
+  `transfer` (Session 38 Unit 2) and `transferFrom` (Session 38 Unit 2) as
+  DAO-symmetric subset per Question 6b Option (ii). Per-function predicates
+  achieve zero-axiom records via constructor-disjointness + decide-based
+  side-condition discharge. The contract-level
+  `compoundContract_satisfies_OZGuardDisciplineGeneral` evaluation produced
+  at Session 38 Unit 3 demonstrates this contract satisfies predicate
+  discipline at both load-bearing function bodies.
+
+  Phase 3-4 compressed (Session 38 per Question 6a Option (A)): functions +
+  per-function predicates + master + wrapper + meta-theorem in one session.
+  Phase 5/6 absorbed into Phase 3-4 closure: gap-disclosure deltas-from-Layer-6-A
+  embedded at module-level docstring §1-§4 below; audit gate added at Unit 4
+  parallel CI block.
+
+  Coexistence: Sessions 14-37 substantive constructs, DAOContract.lean (Layer
+  6-A formalization), and DAOAttack.lean (Layer 6-A trace-layer prior work)
+  preserved unchanged. M-26.1.1 sub-aspect (substantive-theorem boundary) holds:
+  CompoundContract.lean composes against universal soundness from Sessions 14-27
+  without modification.
 -/
 
 import QanaryContracts.Contract
@@ -15,6 +43,116 @@ import QanaryContracts.EVM
 import QanaryContracts.OZSoundness
 
 namespace QanaryContracts
+
+/-! # Compound v2 cToken Positive-Instance Certificate
+
+This module formalizes the Compound v2 cToken family per Session 37
+reconnaissance survey, with cDAI deployed at
+`0x5d3a536e4d6dbd6114cc1ead35777bab948e3643` as canonical exemplar.
+The certificate composes Phase 3 abstract-pattern + body-shape evidence
+(`IsOZGuardedFunctionGeneral_at_transfer` and `_at_transferFrom`) with
+the contract-level discipline (`compoundContract_satisfies_OZGuardDisciplineGeneral`)
+into the discriminating-power claim's positive side at
+`compoundContract_positive_instance_certificate`. Together with Layer 6-A's
+`daoContract_negative_instance_certificate`, the bidirectional
+discriminating-power claim is structurally grounded — rejection at deployed
+historical artifact (DAO 2016) plus acceptance at deployed production
+reference (cDAI's Compound v2 cToken family).
+
+## §1 Compositional Context
+
+Layer 6-B composes against the universal soundness theorem framework from
+Sessions 14-27 (`OZGuardDisciplineGeneral`, `IsOZGuardedFunctionGeneral`)
+without modifying it. Compose-from-outside discipline (M-26.1 umbrella per
+Session 36 Unit 2 graduation; M-26.1.1 sub-aspect) holds across the layer
+boundary; DAOContract.lean and DAOAttack.lean both preserved unchanged
+across Sessions 31-38. Layer 6-B's positive-instance proof is additive.
+
+## §2 Abstract cToken Pattern Semantics
+
+Per Question 5d Option (X-prime) abstract pattern load-bearing decision.
+The abstract pattern (`cTokenAbstractPattern`) captures the
+SSTORE-CALL-SSTORE structural shape parameterized over inner steps; future
+cTokens (cUSDC, cETH, ...) instantiate the same pattern with different
+callee addresses. The abstract pattern lemma
+(`cTokenAbstractPattern_isOZGuardedFunctionGeneral`) discharges the
+existential body witness at wrapper-layer per M-22.2 Tier 1 architectural-
+cleanliness pattern (Session 36 Unit 3 refinement; third bidirectional
+empirical instance after Layer 6-A Phase 3 master and Phase 4 meta-theorem).
+
+The pattern's structural transmissibility scope: any cToken following the
+abstract pattern shape — head SSTORE engaging the guard, body steps
+satisfying NoSStoreOnGuardSlot + NoCallToSelf, tail SSTORE disengaging
+guard plus return — satisfies `IsOZGuardedFunctionGeneral` at the abstract
+layer. Specific deployed bytecode semantics deferred per Option (X-prime).
+
+## §3 cDAI Reference Exemplar
+
+| Item | Value |
+|------|-------|
+| Contract address | `0x5d3a536e4d6dbd6114cc1ead35777bab948e3643` |
+| Family | Compound v2 cToken (`CErc20` variant) |
+| Underlying | DAI (`0x6b175474e89094c44da98b954eedeac495271d0f`) |
+| Source-of-truth | `compound-finance/compound-protocol` |
+| Reference framing | abstract pattern layer (Question 5d Option (X-prime)) |
+| Numeric standin | `compoundContractAddress := ⟨7, by decide⟩` |
+
+The certificate's claim transmits to the deployed cDAI contract insofar as
+its `nonReentrant`-decorated `transfer` and `transferFrom` follow the
+abstract pattern's structural shape. Solidity-line-level disassembly evidence
+deferred per the abstract-pattern-load-bearing framing.
+
+## §4 Three-Theorem Structure
+
+Five theorems mirror Layer 6-A's Phase 3-4 structure with Option (m) asymmetry:
+
+| Theorem | Layer | Axiom record |
+|---------|-------|-------------|
+| `IsOZGuardedFunctionGeneral_at_transfer` | per-function (inner) | zero-axiom |
+| `IsOZGuardedFunctionGeneral_at_transferFrom` | per-function (inner) | zero-axiom |
+| `compoundContract_satisfies_OZGuardDisciplineGeneral` | master | `[propext]`-only |
+| `compoundContract_predicate_accepted_at_PhaseY` | Phase Y wrapper | `[propext]`-only |
+| `compoundContract_positive_instance_certificate` | meta-theorem | `[propext]`-only |
+
+Mirror Layer 6-A: 2 zero-axiom + 4 `[propext]`-only. Layer 6-B has one
+fewer `[propext]`-only because no trace-witness wrapper exists per
+Option (m) compose-from-outside discipline framing (no parallel
+CompoundAttack.lean). The architectural-cleanliness pattern (M-22.2 Tier 1)
+applies at the abstract pattern lemma absorbing the existential at
+wrapper-layer; per-function inner lemmas compose against it; master + Phase Y
+wrapper + meta inherit `[propext]`-only via composition.
+
+## §5 Audit Gate Verification Scope
+
+The CI workflow at `.github/workflows/build.yml` carries a parallel
+`Verify Layer 6-B theorem axiom records` block at line 356 (added at
+Session 38 Unit 4) gating the three CI-gated theorems' kernel-only axiom
+records on every PR / push to main. Coverage: three `[propext]`-only
+theorems (master + Phase Y wrapper + meta). Per-function inner lemmas
+(`IsOZGuardedFunctionGeneral_at_transfer`, `_at_transferFrom`) remain
+proven internally to CompoundContract.lean for downstream composition use
+but are not CI-gated per Session 38 directive's three-CI-gated-entries
+specification.
+
+The block follows the Session 19/25/27 + Layer 6-A awk-merger pattern with
+per-theorem expected-record gating; drift fails CI before the change can
+land. Parallel block structure mirrors Layer 6-A's
+`Verify Layer 6-A theorem axiom records` block at line 287 per Question
+6d Option (2) parallel structure + Naming (a) symmetric layer-scope
+convention. Per-layer scope reflects the bidirectional discriminating-power
+claim's structural symmetry at the artifact level.
+
+## §6 Layer 6-B Documentation Locus Closure
+
+This module-level docstring carries compositional context (§1) +
+abstract pattern semantics (§2) + cDAI reference (§3) + theorem structure
+(§4) + audit-gate scope (§5) at one unified locus. Reviewers reading this
+file see the full Layer 6-B context without external cross-references;
+paper §10 raw material grounded at the artifact layer matching
+DAOContract.lean's Layer 6-A closure pattern. The bidirectional
+discriminating-power claim's substantive substrate is structurally
+complete with both Layer 6-A and Layer 6-B documentation locuses
+self-contained at their respective module artifacts. -/
 
 /-! ## Foundational helpers (Layer 6-B Phase 3, Session 38 Unit 1)
 
