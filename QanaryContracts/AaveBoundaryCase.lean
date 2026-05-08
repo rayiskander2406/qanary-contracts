@@ -198,4 +198,129 @@ def aaveAdjacentVulnerablePattern (C : Contract) (innerSteps : List FunctionBody
   [FunctionBody.Step.sstore C.guardSlot C.lockedValue,
    FunctionBody.Step.ret true]
 
+/-! ## `flashLoan` formalization (Layer 6-C Phase 3, Session 40 Unit 2)
+
+    Aave V3 Pool's `flashLoan` function modeled at body-shape layer per
+    Question 8e Framing (a) body-shape minimal-scope discipline. Single-
+    step inner with the protected callback CALL captures the CEI-correct
+    structural feature: head SSTORE engages guard, callback CALL fires
+    while guarded, tail SSTORE disengages guard, RET.
+
+    Body shape (4 steps, mirror of Layer 6-B's `transfer` at structural
+    granularity):
+    * `.sstore aaveGuardSlot aaveLockedValue`   — guard engage (`_status = _ENTERED`)
+    * `.call aaveCallbackTargetAddress 0`        — protected callback CALL
+                                                   (the IFlashLoanReceiver
+                                                    .executeOperation
+                                                    invocation)
+    * `.sstore aaveGuardSlot aaveUnlockedValue` — guard disengage (`_status = _NOT_ENTERED`)
+    * `.ret true`                                — return success
+
+    Auxiliary state mutations (asset transfers, fee accumulation) are
+    not modeled — they are inert relative to the predicate's structural-
+    acceptance argument at body-shape layer. Layer 6-D cross-protocol
+    audit gate work may extend the model with richer auxiliary mutations.
+
+    Definitional equality `flashLoan = aaveProtocolByDesignPattern
+    aaveContract [.call aaveCallbackTargetAddress ⟨0, by decide⟩]` holds
+    via iota reduction on `aaveContract`'s structure literal projections
+    (`.guardSlot → aaveGuardSlot`, `.lockedValue → aaveLockedValue`,
+    `.unlockedValue → aaveUnlockedValue`); the per-function lemma below
+    relies on this equality at the `refine` site.
+
+    See an internal VRVP methodology note §2 for the body-
+    shape specification and §4 body-shape-vs-trace-layer framing. -/
+def flashLoan : FunctionBody :=
+  [FunctionBody.Step.sstore aaveGuardSlot aaveLockedValue,
+   FunctionBody.Step.call aaveCallbackTargetAddress ⟨0, by decide⟩,
+   FunctionBody.Step.sstore aaveGuardSlot aaveUnlockedValue,
+   FunctionBody.Step.ret true]
+
+/-! ## `aaveContract` Contract definition (Layer 6-C Phase 3, Session 40 Unit 2)
+
+    The protocol-by-design contract literal composing `flashLoan` from
+    above with the helper constants from Unit 1. Field literals support
+    definitional equality with `aaveProtocolByDesignPattern aaveContract
+    [<inner>]` at the per-function lemma proof site:
+    `aaveContract.guardSlot` reduces to `aaveGuardSlot` via iota;
+    `.lockedValue` to `aaveLockedValue`; `.unlockedValue` to
+    `aaveUnlockedValue`; `.address` to `aavePoolAddress`.
+
+    Single-function literal `[flashLoan]` reflects the abstract-pattern-
+    layer minimal-scope framing: Aave V3 Pool's flashLoan is the load-
+    bearing protocol-by-design exemplar; other Pool functions (supply,
+    borrow, repay, ...) are deferred per Question 8e Framing (a)
+    discipline (one canonical CEI-correct function suffices for the
+    boundary case demonstration). -/
+def aaveContract : Contract :=
+  { address := aavePoolAddress,
+    guardSlot := aaveGuardSlot,
+    unlockedValue := aaveUnlockedValue,
+    lockedValue := aaveLockedValue,
+    functions := [flashLoan] }
+
+/-! ## Per-function predicate at `flashLoan` (Layer 6-C Phase 3, Session 40 Unit 2)
+
+    Layer 6-C positive-instance per-function lemma at the protocol-by-
+    design contract. Applies Unit 1's
+    `aaveProtocolByDesignPattern_isOZGuardedFunctionGeneral` lemma
+    directly per M-22.2 Tier 1 architectural-cleanliness pattern (fourth
+    empirical instance). The body shape `flashLoan` reduces definitionally
+    to `aaveProtocolByDesignPattern aaveContract [.call
+    aaveCallbackTargetAddress ⟨0, by decide⟩]` via iota on
+    `aaveContract`'s structure literal projections; the abstract pattern
+    lemma absorbs the existential body witness at wrapper-layer.
+
+    Naming per Naming (b-prime): theorem name carries the contract prefix
+    `aaveContract_` to disambiguate from Unit 3's rejection lemma at
+    `aaveContractAdjacent`. The paired theorem name structure
+    (`_at_aaveContract_flashLoan` vs `_at_aaveContractAdjacent_flashLoanVulnerable`)
+    reflects the substantive paired-pattern distinction at theorem-name
+    granularity per Question 8c Option (P) M-22.2 Tier 1 wrapper-layer
+    absorption framing.
+
+    **Body-shape-vs-trace-layer framing (Question 8e Framing (a)):**
+    the lemma proves predicate ACCEPTANCE at body-shape layer despite
+    the callback CALL appearing as potential reentrancy at trace layer.
+    The discriminating-power claim's structural argument operates on
+    the body-shape's structural feature (head SSTORE engages guard
+    before CALL; tail SSTORE disengages guard after CALL), not on
+    whether the callback's runtime behavior actually re-enters. The
+    OZ `_status` check would `revert` on reentry; the body shape's
+    `[sstore lock, ..., sstore unlock, ret]` schema is the structural
+    witness for the protocol invariant.
+
+    Side condition discharges:
+    * `NoSStoreOnGuardSlotInSteps`: vacuous on the single `.call` inner
+      step via constructor disjointness `.call ≠ .sstore`.
+    * `NoCallToSelfInSteps`: holds via `aaveCallbackTargetAddress ≠
+      aavePoolAddress` discharged by `decide` (kernel decide; no
+      `native_decide` axiom).
+
+    Axiom record target: zero-axiom (kernel-only). The proof uses
+    `refine` + `intro` + anonymous-constructor destructuring + `cases`
+    + `injection` + `rw` + `decide` — all kernel-only tactics.
+
+    See an internal VRVP methodology note §3 for the proof
+    tactic strategy and §3.2 axiom-record projection. -/
+theorem IsOZGuardedFunctionGeneral_at_aaveContract_flashLoan :
+    IsOZGuardedFunctionGeneral aaveContract flashLoan := by
+  refine aaveProtocolByDesignPattern_isOZGuardedFunctionGeneral aaveContract
+    [FunctionBody.Step.call aaveCallbackTargetAddress ⟨0, by decide⟩] ?_ ?_
+  · -- NoSStoreOnGuardSlotInSteps on [.call ...]
+    intro s hs
+    rintro ⟨val, h⟩
+    cases hs with
+    | head _ => cases h
+    | tail _ h_tail => cases h_tail
+  · -- NoCallToSelfInSteps on [.call ...]
+    intro s hs callee value h_call
+    cases hs with
+    | head _ =>
+      injection h_call with h_callee _
+      intro h_addr_eq
+      rw [← h_callee] at h_addr_eq
+      exact absurd h_addr_eq (by decide)
+    | tail _ h_tail => cases h_tail
+
 end QanaryContracts
