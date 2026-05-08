@@ -323,4 +323,152 @@ theorem IsOZGuardedFunctionGeneral_at_aaveContract_flashLoan :
       exact absurd h_addr_eq (by decide)
     | tail _ h_tail => cases h_tail
 
+/-! ## `flashLoanVulnerable` formalization (Layer 6-C Phase 3, Session 40 Unit 3)
+
+    The structurally adjacent vulnerable function modeled at body-shape
+    layer per Question 8b Variation (i) SSTORE-after-CALL DAO-mirror
+    confirmation. Single-step inner = the UNGUARDED callback CALL at
+    head position (no guard SSTORE precedes it; OZ `_status` is in its
+    initial state, not the `_ENTERED` state required for reentrancy
+    protection).
+
+    Body shape (3 steps):
+    * `.call aaveCallbackTargetAddress 0`        — UNGUARDED callback CALL
+                                                   at head (CEI-violation:
+                                                   external CALL fires
+                                                   before guard engaged)
+    * `.sstore aaveGuardSlot aaveLockedValue`   — guard engage AFTER
+                                                   callback returned
+                                                   (structurally inert
+                                                   against reentrancy:
+                                                   guard engaged after
+                                                   the protected window)
+    * `.ret true`                                — return
+
+    **Structural symmetry mapping with DAO 2016 (paper §10 raw material):**
+
+    | Layer 6-A (`withdrawRewardFor`) | Layer 6-C (`flashLoanVulnerable`) |
+    |---|---|
+    | `.call daoRewardAccount 0`     | `.call aaveCallbackTargetAddress 0` |
+    | `.sstore daoPaidOutSlot 0`     | `.sstore aaveGuardSlot aaveLockedValue` |
+    |   (state mutation AFTER CALL  — CEI violation) | (state mutation AFTER CALL — CEI violation) |
+    | `.ret true`                    | `.ret true` |
+    | Head step `.call` ≠ predicate-required `.sstore` | Head step `.call` ≠ predicate-required `.sstore` |
+
+    Both layers reject at the same head-element-injectivity mechanism:
+    head step is `.call`; predicate-required head is
+    `.sstore C.guardSlot C.lockedValue`; constructor disjointness
+    `.call ≠ .sstore` produces the rejection via
+    `FunctionBody.Step.noConfusion`.
+
+    **Inverse direction interpretation:** DAO 2016 violates because
+    deployed (the structural feature was in production code attacked
+    on June 17 2016); Aave V3 adjacent violates because constructed
+    (the structural feature is inserted into a synthetic contract for
+    boundary case demonstration — the deployed Aave V3 Pool does NOT
+    have this body shape; only the protocol-by-design `flashLoan`
+    from Unit 2 corresponds to deployed code).
+
+    The discriminating-power claim's structural-neighborhood granularity
+    argument is the bridge: the predicate's decision flips at the
+    head-frame layer between protocol-by-design (Unit 2 `flashLoan`,
+    accepted) and structurally adjacent vulnerable (Unit 3
+    `flashLoanVulnerable`, rejected), demonstrating the predicate
+    distinguishes structurally adjacent patterns where small variations
+    flip the predicate's decision.
+
+    Definitional equality `flashLoanVulnerable = aaveAdjacentVulnerablePattern
+    aaveContractAdjacent [.call aaveCallbackTargetAddress ⟨0, by decide⟩]`
+    holds via iota on `aaveContractAdjacent`'s structure literal
+    projections; the structural correspondence is recoverable at any
+    proof site that benefits from explicit pattern-instantiation framing.
+
+    See an internal VRVP methodology note §2 for the
+    body-shape specification and §4 DAO-mirror structural symmetry
+    framing. -/
+def flashLoanVulnerable : FunctionBody :=
+  [FunctionBody.Step.call aaveCallbackTargetAddress ⟨0, by decide⟩,
+   FunctionBody.Step.sstore aaveGuardSlot aaveLockedValue,
+   FunctionBody.Step.ret true]
+
+/-! ## `aaveContractAdjacent` Contract definition (Layer 6-C Phase 3, Session 40 Unit 3)
+
+    The structurally adjacent vulnerable contract literal differs from
+    `aaveContract` (Unit 2) ONLY in the `functions` field — all other
+    fields (address, guardSlot, lockedValue, unlockedValue) are
+    identical. The structural-adjacency framing makes the boundary case
+    argument transparent at reading time: reviewers see two Contract
+    records that differ only at `functions`; the predicate's distinct
+    decisions on the two contracts isolate the discriminating feature
+    to the body shape itself.
+
+    Single-function literal `[flashLoanVulnerable]` mirrors `aaveContract`'s
+    single-function literal `[flashLoan]` at the structural symmetry
+    layer; the paired-pattern boundary case operates at one-function-
+    per-contract granularity for both directions. -/
+def aaveContractAdjacent : Contract :=
+  { address := aavePoolAddress,
+    guardSlot := aaveGuardSlot,
+    unlockedValue := aaveUnlockedValue,
+    lockedValue := aaveLockedValue,
+    functions := [flashLoanVulnerable] }
+
+/-! ## Per-function rejection lemma at `flashLoanVulnerable` (Layer 6-C Phase 3, Session 40 Unit 3)
+
+    Layer 6-C negative-instance per-function lemma at the structurally
+    adjacent vulnerable contract. Mirror of Layer 6-A's two falsifications
+    at `withdrawRewardFor` and `splitDAO` — same head-element constructor
+    disjointness mechanism via the four-tactic reconstruction
+    `rintro → unfold → injection → noConfusion`.
+
+    Naming per Naming (b-prime): theorem name carries the contract prefix
+    `aaveContractAdjacent_` to disambiguate from Unit 2's per-function
+    lemma at `aaveContract`. The paired theorem name structure
+    (`_at_aaveContract_flashLoan` for acceptance vs
+    `_falsified_at_aaveContractAdjacent_flashLoanVulnerable` for
+    rejection) reflects the substantive paired-pattern distinction at
+    theorem-name granularity.
+
+    **Proof tactic walkthrough:**
+
+    * `rintro ⟨body, h_eq, _, _⟩`: destructure the
+      `IsOZGuardedFunctionGeneral` existential. The two side conditions
+      (`NoSStoreOnGuardSlotInSteps` and `NoCallToSelfInSteps`) are
+      discarded — the rejection happens at the body-shape equation
+      `h_eq` BEFORE side conditions become relevant.
+    * `unfold flashLoanVulnerable at h_eq`: reduce to literal body. The
+      hypothesis becomes a list-equality between the literal body and
+      the predicate's required cons-cell shape.
+    * `injection h_eq with h_head _`: list constructor injectivity
+      decomposes into head-equality plus tail-equality; `h_head` extracts
+      the head equality `.call aaveCallbackTargetAddress _ = .sstore
+      aaveContractAdjacent.guardSlot aaveContractAdjacent.lockedValue`.
+    * `exact FunctionBody.Step.noConfusion h_head`: auto-generated
+      `noConfusion` lemma resolves constructor disjointness `.call ≠
+      .sstore`, producing `False` and closing the goal.
+
+    **Independence from Unit 2's per-function lemma:** the rejection
+    operates at structurally distinct mechanism layer — Unit 2 applies
+    abstract pattern lemma at wrapper-layer absorbing the existential;
+    Unit 3 rejects existential at body-shape equation via head-element
+    constructor disjointness. Side conditions are never relevant in
+    Unit 3's proof. Together they ground Theorem γ (Unit 4 composition
+    meta-theorem) at structurally distinct evidence layers — acceptance
+    via wrapper-layer absorption + rejection via head-element disjointness.
+
+    Axiom record target: zero-axiom (kernel-only). The proof uses
+    `rintro` + `unfold` + `injection` + `exact`/`noConfusion` —
+    all kernel operations. No `simp`, no `decide` (not needed —
+    rejection is purely structural at constructor layer), no
+    `native_decide`.
+
+    See an internal VRVP methodology note §3 for the proof
+    tactic walkthrough and §3.2 axiom-record projection. -/
+theorem IsOZGuardedFunctionGeneral_falsified_at_aaveContractAdjacent_flashLoanVulnerable :
+    ¬ IsOZGuardedFunctionGeneral aaveContractAdjacent flashLoanVulnerable := by
+  rintro ⟨body, h_eq, _, _⟩
+  unfold flashLoanVulnerable at h_eq
+  injection h_eq with h_head _
+  exact FunctionBody.Step.noConfusion h_head
+
 end QanaryContracts
