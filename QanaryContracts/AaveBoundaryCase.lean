@@ -471,4 +471,138 @@ theorem IsOZGuardedFunctionGeneral_falsified_at_aaveContractAdjacent_flashLoanVu
   injection h_eq with h_head _
   exact FunctionBody.Step.noConfusion h_head
 
+/-! ## Theorem α — protocol-by-design positive composition (Layer 6-C Phase 4, Session 41 Unit 1)
+
+    F2-B / Layer 6-C Phase 4 Theorem α: the Aave V3 protocol-by-design
+    contract satisfies `OZGuardDisciplineGeneral`. The proof composes
+    Session 40 Unit 2's per-function acceptance lemma
+    `IsOZGuardedFunctionGeneral_at_aaveContract_flashLoan` (zero-axiom)
+    via the predicate's universal-quantification structure at
+    contract-level granularity.
+
+    **M-22.2-T1-empirical-instance-4:** This theorem realizes the
+    M-22.2 Tier 1 architectural-cleanliness pattern's fourth empirical
+    instance after:
+    1. Layer 6-A Phase 3 master `daoContract_violates_OZGuardDisciplineGeneral`
+       (rejection direction).
+    2. Layer 6-A Phase 4 meta-theorem `daoContract_negative_instance_certificate`
+       (rejection direction).
+    3. Layer 6-B Theorem A `compoundContract_satisfies_OZGuardDisciplineGeneral`
+       (acceptance direction).
+    4. **This theorem** (structural-neighborhood discrimination at
+       acceptance side).
+
+    The fourth empirical instance extends the Tier 1 wrapper-layer
+    absorption pattern's empirical evidence from bidirectional
+    (Layer 6-A rejection + Layer 6-B acceptance) to **tridirectional**
+    (rejection + acceptance + structural-neighborhood discrimination).
+    Future post-Layer-6-housekeeping pause point may consider whether
+    four-instance evidence strengthens the M-22.2 Tier 1 refinement to
+    graduation candidacy.
+
+    Naming per Naming (b-prime): `_at_flashLoan` suffix anchors the
+    theorem to its single load-bearing function (vs Layer 6-B's master
+    `compoundContract_satisfies_OZGuardDisciplineGeneral` without
+    function suffix because Layer 6-B's master covers two functions
+    transfer + transferFrom).
+
+    Axiom record target: `[propext]`-only (uses `simp [aaveContract]`
+    for membership reduction; mirrors Layer 6-B's master pattern at
+    single-function granularity).
+
+    See an internal VRVP methodology note §2 for the proof
+    structure specification, §1 architectural symmetry mapping, and
+    §2.4 fourth empirical instance documentation. -/
+theorem aaveContract_satisfies_OZGuardDisciplineGeneral_at_flashLoan :
+    OZGuardDisciplineGeneral aaveContract := by
+  refine ⟨?_, ?_⟩
+  · -- aaveContract.functions ≠ []
+    simp [aaveContract]
+  · -- ∀ f ∈ functions, IsOZGuardedFunctionGeneral aaveContract f
+    intro f hf
+    simp [aaveContract] at hf
+    rcases hf with rfl
+    exact IsOZGuardedFunctionGeneral_at_aaveContract_flashLoan
+
+/-! ## Theorem β — structurally adjacent negative composition (Layer 6-C Phase 4, Session 41 Unit 1)
+
+    F2-B / Layer 6-C Phase 4 Theorem β: the structurally adjacent
+    vulnerable contract violates `OZGuardDisciplineGeneral`. The proof
+    composes Session 40 Unit 3's per-function rejection lemma
+    `IsOZGuardedFunctionGeneral_falsified_at_aaveContractAdjacent_flashLoanVulnerable`
+    (zero-axiom) via the predicate's universal-quantification structure
+    at contract-level granularity, mirroring Layer 6-A's master
+    rejection proof shape (`daoContract_violates_OZGuardDisciplineGeneral`)
+    at the Aave V3 boundary case.
+
+    Proof flow: destructure `OZGuardDisciplineGeneral aaveContractAdjacent`
+    as `⟨_h_ne, h_all⟩`; establish flashLoanVulnerable membership;
+    apply universal-quantification hypothesis to derive the (refuted)
+    per-function predicate; compose with the rejection lemma to derive
+    `False`.
+
+    Naming per Naming (b-prime): `_at_flashLoanVulnerable` suffix
+    anchors the theorem to the structurally adjacent vulnerable
+    function. The paired theorem name structure
+    (`aaveContract_satisfies_*_at_flashLoan` vs
+    `aaveContractAdjacent_violates_*_at_flashLoanVulnerable`) reflects
+    the substantive paired-pattern distinction at theorem-name
+    granularity.
+
+    Axiom record target: `[propext]`-only (uses
+    `simp [aaveContractAdjacent]` for membership reduction; mirror of
+    Layer 6-A's `daoContract_violates_OZGuardDisciplineGeneral` pattern).
+
+    See an internal VRVP methodology note §3 for the proof
+    structure specification. -/
+theorem aaveContractAdjacent_violates_OZGuardDisciplineGeneral_at_flashLoanVulnerable :
+    ¬ OZGuardDisciplineGeneral aaveContractAdjacent := by
+  rintro ⟨_h_ne, h_all⟩
+  have h_mem : flashLoanVulnerable ∈ aaveContractAdjacent.functions := by
+    simp [aaveContractAdjacent]
+  exact IsOZGuardedFunctionGeneral_falsified_at_aaveContractAdjacent_flashLoanVulnerable
+    (h_all flashLoanVulnerable h_mem)
+
+/-! ## Theorem γ — boundary case composition meta-theorem (Layer 6-C Phase 4, Session 41 Unit 1)
+
+    F2-B / Layer 6-C Phase 4 Theorem γ: the structural-neighborhood
+    discriminating-granularity certificate. The certificate's two-
+    conjunct structure (`OZGuardDisciplineGeneral aaveContract ∧
+    ¬ OZGuardDisciplineGeneral aaveContractAdjacent`) witnesses the
+    same predicate deciding differently on two structurally adjacent
+    contracts — the discriminating-power claim's structural-neighborhood
+    granularity argument's load-bearing terminus at Layer 6-C boundary
+    case.
+
+    The two contracts (`aaveContract` and `aaveContractAdjacent`)
+    differ ONLY in the `functions` field — same address, same guardSlot,
+    same lockedValue, same unlockedValue. The predicate's distinct
+    decisions isolate the discriminating feature to the body shape
+    itself: protocol-by-design (CEI-correct, head SSTORE before CALL)
+    accepts; structurally adjacent vulnerable (CEI-violation, SSTORE-
+    after-CALL DAO-mirror) rejects.
+
+    Together with `daoContract_negative_instance_certificate` from
+    Layer 6-A and `compoundContract_positive_instance_certificate`
+    from Layer 6-B, the **tridirectional** discriminating-power claim
+    is structurally grounded:
+    - Rejection at deployed historical reference (DAO 2016).
+    - Acceptance at deployed production reference (cDAI's Compound v2
+      cToken family).
+    - Structural-neighborhood discrimination at boundary case (Aave V3
+      protocol-by-design vs adjacent vulnerable).
+
+    Direct anonymous-constructor composition. Axiom record target:
+    `[propext]`-only (inherited from α and β via direct conjunction;
+    no new tactics introduce additional axioms).
+
+    See an internal VRVP methodology note §4 for the
+    composition specification and §5 boundary case structural framing
+    per Question 8e Framing (a). -/
+theorem aaveBoundaryCase_certificate :
+    OZGuardDisciplineGeneral aaveContract ∧
+    ¬ OZGuardDisciplineGeneral aaveContractAdjacent :=
+  ⟨aaveContract_satisfies_OZGuardDisciplineGeneral_at_flashLoan,
+   aaveContractAdjacent_violates_OZGuardDisciplineGeneral_at_flashLoanVulnerable⟩
+
 end QanaryContracts
