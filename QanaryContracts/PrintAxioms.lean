@@ -21,6 +21,7 @@ import QanaryContracts.W8
 import QanaryContracts.Completeness
 import QanaryContracts.DAOContract
 import QanaryContracts.CompoundContract
+import QanaryContracts.AaveBoundaryCase
 
 open QanaryContracts
 
@@ -415,3 +416,19 @@ theorem audit_guard_protected_blocks_state_aware :
 #print axioms QanaryContracts.compoundContract_satisfies_OZGuardDisciplineGeneral
 #print axioms QanaryContracts.compoundContract_predicate_accepted_at_PhaseY
 #print axioms QanaryContracts.compoundContract_positive_instance_certificate
+
+-- Phase 5 Sessions 40-41 (Layer 6-C Phase 3-4 sequenced closure under Path B):
+-- Aave V3 paired theorem boundary case certificate. All three Phase-4
+-- composition theorems carry [propext]-only axiom records (M-22.2 Tier 1
+-- wrapper-layer absorption, fourth empirical instance after Layer 6-A
+-- Phase 3 master + Phase 4 meta-theorem + Layer 6-B Theorem A;
+-- tridirectional empirical evidence — rejection + acceptance + structural-
+-- neighborhood discrimination). Per-function lemmas at Session 40 Units
+-- 2-3 carry zero-axiom records but are not separately CI-gated per
+-- Layer 6-A/6-B precedent (their axiom records are guaranteed by
+-- composition). CI gating at parallel `Verify Layer 6-C theorem axiom
+-- records` block per Question 8d Option (2) + Naming (a) per-layer
+-- scope convention.
+#print axioms QanaryContracts.aaveContract_satisfies_OZGuardDisciplineGeneral_at_flashLoan
+#print axioms QanaryContracts.aaveContractAdjacent_violates_OZGuardDisciplineGeneral_at_flashLoanVulnerable
+#print axioms QanaryContracts.aaveBoundaryCase_certificate

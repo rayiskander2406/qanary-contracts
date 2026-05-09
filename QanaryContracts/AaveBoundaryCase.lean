@@ -37,6 +37,168 @@ import QanaryContracts.OZSoundness
 
 namespace QanaryContracts
 
+/-! # Aave V3 Pool Boundary Case Paired-Theorem Certificate
+
+This module formalizes Aave V3's `flashLoan` per Session 39 reconnaissance
+survey, with the deployed Pool contract at
+`0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2` (Ethereum mainnet) as canonical
+exemplar. The certificate composes Phase 3 abstract-pattern + per-function
+evidence (`IsOZGuardedFunctionGeneral_at_aaveContract_flashLoan` accepting
+the protocol-by-design body shape; `IsOZGuardedFunctionGeneral_falsified_at_aaveContractAdjacent_flashLoanVulnerable`
+rejecting the structurally adjacent vulnerable body shape) with the
+contract-level discipline at Phase 4 (Theorem α / β / γ) into the
+discriminating-power claim's structural-neighborhood discriminating-
+granularity side at `aaveBoundaryCase_certificate`. Together with Layer
+6-A's `daoContract_negative_instance_certificate` and Layer 6-B's
+`compoundContract_positive_instance_certificate`, the tridirectional
+discriminating-power claim is structurally grounded — rejection at
+deployed historical reference (DAO 2016) + acceptance at deployed
+production reference (cDAI's Compound v2 cToken family) + structural-
+neighborhood discrimination at boundary case (Aave V3 protocol-by-design
+vs structurally adjacent vulnerable).
+
+## §1 Compositional Context
+
+Layer 6-C composes against the universal soundness theorem framework
+from Sessions 14-27 (`OZGuardDisciplineGeneral`, `IsOZGuardedFunctionGeneral`)
+without modifying it. M-26.1 compose-from-outside discipline (Session 36
+Unit 2 graduation; M-26.1.1 sub-aspect) holds across the Layer 6-A → 6-B
+→ 6-C boundary; `DAOContract.lean`, `DAOAttack.lean`, and
+`CompoundContract.lean` all preserved unchanged across Sessions 31-41.
+Layer 6-C's paired theorem boundary case proof is additive at third
+protocol-instantiation boundary.
+
+The discriminating-power claim's tridirectional empirical evidence
+operates at three structurally distinct layers:
+- **Layer 6-A (rejection):** historical artifact (DAO 2016 production
+  code attacked June 17 2016).
+- **Layer 6-B (acceptance):** production reference (Compound v2 cToken
+  family deployed at cDAI).
+- **Layer 6-C (structural-neighborhood discrimination):** boundary case
+  (Aave V3 protocol-by-design `flashLoan` accepted; structurally
+  adjacent vulnerable `flashLoanVulnerable` rejected).
+
+## §2 Boundary Case Structural Framing (Question 8e Framing (a))
+
+Layer 6-C demonstrates the predicate's structural-neighborhood
+discriminating granularity at body-shape layer. Two Contract instances
+(`aaveContract` and `aaveContractAdjacent`) differ ONLY in the `functions`
+field — same `address`, same `guardSlot`, same `lockedValue`, same
+`unlockedValue`. The predicate decides differently on them, isolating
+the discriminating feature to body shape itself.
+
+**Body-shape-vs-trace-layer distinction:** at trace layer, both `flashLoan`
+and `flashLoanVulnerable` involve a callback CALL that could in principle
+re-enter the Pool. At body-shape layer, only `flashLoan` engages the
+guard (`.sstore guardSlot lockedValue`) BEFORE the callback CALL — the
+protocol invariant. The predicate `IsOZGuardedFunctionGeneral` operates
+at body-shape layer where the structural feature is locally visible.
+The structurally adjacent vulnerable variant (`flashLoanVulnerable`)
+inverts the SSTORE-CALL ordering, mirroring DAO 2016's exploited feature
+at the inverse direction (DAO violates because deployed; Aave V3 adjacent
+violates because constructed for boundary case demonstration).
+
+The structural-neighborhood discriminating granularity claim grounds
+at the predicate's local visibility of the CEI ordering: CEI-correct
+ordering accepts; CEI-violation ordering rejects. The same head-element-
+injectivity mechanism rejects both DAO 2016 (Layer 6-A) and Aave V3
+adjacent (Layer 6-C), demonstrating the discriminating-power claim's
+structural argument transmits across protocol-instantiation boundaries.
+
+## §3 Aave V3 Reference Exemplar
+
+| Item                  | Value                                                                  |
+|-----------------------|------------------------------------------------------------------------|
+| Pool contract address | `0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2` (Ethereum mainnet)        |
+| Function              | `flashLoan` (the canonical protocol-by-design CEI-correct exemplar)    |
+| Reentrancy guard      | OpenZeppelin `ReentrancyGuard` `_status` flag (`_NOT_ENTERED` / `_ENTERED`) |
+| Callback target       | borrower-supplied `IFlashLoanReceiver.executeOperation`                |
+| Source-of-truth       | `aave/aave-v3-core` repository                                         |
+| Reference framing     | abstract pattern layer (Question 8e Framing (a))                       |
+| Numeric standin       | `aavePoolAddress := ⟨9, by decide⟩`                                    |
+
+The protocol-by-design `flashLoan` body engages `_status = _ENTERED`
+before invoking the callback, then engages `_status = _NOT_ENTERED`
+after the callback returns; this is the canonical CEI-correct ordering.
+The structurally adjacent vulnerable `flashLoanVulnerable` (constructed,
+not deployed) inverts the ordering: callback CALL fires first with
+guard NOT engaged, then a single SSTORE engages the guard AFTER the
+callback returned (CEI-violation; structurally inert against reentrancy).
+The certificate's claim transmits to the deployed Aave V3 Pool insofar
+as its `nonReentrant`-decorated `flashLoan` follows the protocol-by-
+design pattern's structural shape.
+
+## §4 Paired Theorem Structure
+
+Per Question 7b paired-theorem framing plus Question 8c Option (P)
+M-22.2 Tier 1 wrapper-layer absorption. Three theorems realize the
+boundary case substantive substrate:
+
+| Theorem | Layer | Axiom record | Direction |
+|---------|-------|--------------|-----------|
+| `aaveContract_satisfies_OZGuardDisciplineGeneral_at_flashLoan` (α) | Phase 4 wrapper | `[propext]`-only | acceptance |
+| `aaveContractAdjacent_violates_OZGuardDisciplineGeneral_at_flashLoanVulnerable` (β) | Phase 4 wrapper | `[propext]`-only | rejection |
+| `aaveBoundaryCase_certificate` (γ) | Phase 4 meta-theorem | `[propext]`-only | composition |
+
+Plus three per-function lemmas at Session 40 Units 2-3 (zero-axiom):
+- `aaveProtocolByDesignPattern_isOZGuardedFunctionGeneral` (abstract pattern soundness lemma).
+- `IsOZGuardedFunctionGeneral_at_aaveContract_flashLoan` (per-function acceptance via abstract pattern lemma application).
+- `IsOZGuardedFunctionGeneral_falsified_at_aaveContractAdjacent_flashLoanVulnerable` (per-function rejection via head-element constructor disjointness).
+
+**Architectural symmetry mapping with Layer 6-A and Layer 6-B:** the
+three-theorem structure mirrors Layer 6-A's three-theorem (master
+rejection + Phase-4 wrapper alias + composition meta-theorem) and
+Layer 6-B's three-theorem (master acceptance + Phase-Y wrapper alias +
+composition meta-theorem) at structurally distinct content (paired
+positive/negative slot at Layer 6-C vs single-direction at Layer 6-A/6-B).
+See an internal VRVP methodology note §1 for the full three-
+column architectural symmetry mapping table.
+
+**M-22.2-T1-empirical-instance-4 (paper §10 traceability):** Theorem α
+realizes the M-22.2 Tier 1 architectural-cleanliness pattern's fourth
+empirical instance after Layer 6-A Phase 3 master + Layer 6-A Phase 4
+meta-theorem + Layer 6-B Theorem A. The fourth instance extends the
+Tier 1 wrapper-layer absorption pattern's empirical evidence from
+bidirectional to tridirectional.
+
+## §5 Audit Gate Verification Scope
+
+The CI workflow at `.github/workflows/build.yml` carries a parallel
+`Verify Layer 6-C theorem axiom records` block (added at Session 41
+Unit 2) gating the three Phase-4-composition theorems' kernel-only
+axiom records on every PR / push to main. Coverage: three `[propext]`-only
+theorems (α + β + γ). Per-function lemmas (`IsOZGuardedFunctionGeneral_at_aaveContract_flashLoan`,
+`IsOZGuardedFunctionGeneral_falsified_at_aaveContractAdjacent_flashLoanVulnerable`,
+`aaveProtocolByDesignPattern_isOZGuardedFunctionGeneral`) carry zero-axiom
+records but are not separately CI-gated per Layer 6-A/6-B precedent
+(their axiom records are guaranteed by composition: if α/β/γ verify
+`[propext]`-only at CI gate, the underlying per-function lemmas
+necessarily carry no additional axioms).
+
+The block follows the Sessions 19/25/27/35/38 awk-merger pattern with
+per-theorem expected-record gating; drift fails CI before the change
+can land. Parallel block structure mirrors Layer 6-A's
+`Verify Layer 6-A theorem axiom records` block at line 287 and
+Layer 6-B's `Verify Layer 6-B theorem axiom records` block at line 356
+per Question 8d Option (2) parallel structure + Naming (a) symmetric
+layer-scope convention. Per-layer scope reflects the tridirectional
+discriminating-power claim's structural symmetry at the artifact level.
+
+## §6 Layer 6-C Documentation Locus Closure
+
+This module-level docstring carries compositional context (§1) +
+boundary case structural framing (§2) + Aave V3 reference (§3) +
+paired theorem structure (§4) + audit-gate scope (§5) at one unified
+locus. Reviewers reading this file see the full Layer 6-C context
+without external cross-references; paper §10 raw material grounded at
+the artifact layer matching `DAOContract.lean`'s Layer 6-A closure
+pattern and `CompoundContract.lean`'s Layer 6-B closure pattern. The
+tridirectional discriminating-power claim's substantive substrate is
+structurally complete with Layer 6-A, 6-B, and 6-C documentation
+locuses self-contained at their respective module artifacts. Subsequent
+housekeeping and Layer 6-D cross-protocol audit gate work documented
+elsewhere; Layer 6-C documentation locus closes here. -/
+
 /-! ## Foundational helpers (Layer 6-C Phase 3, Session 40 Unit 1)
 
     Address/slot/value definitions parametrizing both Layer 6-C abstract

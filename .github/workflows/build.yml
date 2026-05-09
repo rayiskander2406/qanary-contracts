@@ -404,3 +404,59 @@ jobs:
 
           if [ "$fail" -ne 0 ]; then exit 1; fi
           echo "PASS: all three Layer 6-B theorems carry expected [propext]-only axiom records"
+
+      - name: Verify Layer 6-C theorem axiom records
+        run: |
+          set -euo pipefail
+          output=$(lake env lean QanaryContracts/PrintAxioms.lean 2>&1 | awk '
+            /^'\''/ { if (acc != "") print acc; acc = $0; next }
+            acc != "" && /^ / { sub(/^[ ]+/, " ", $0); acc = acc $0; next }
+            { if (acc != "") { print acc; acc = "" } ; print }
+            END { if (acc != "") print acc }
+          ')
+          # Phase 5 Sessions 40-41 (Layer 6-C Phases 3-4 sequenced closure
+          # under Path B): Aave V3 paired theorem boundary case certificate's
+          # three Phase-4-composition theorems gated against axiom drift.
+          # All three carry [propext]-only records (M-22.2 Tier 1 wrapper-
+          # layer absorption pattern empirically applied at Layer 6-C —
+          # fourth empirical instance after Layer 6-A Phase 3 master,
+          # Layer 6-A Phase 4 meta-theorem, and Layer 6-B Theorem A).
+          # The discriminating-power claim's structural-neighborhood
+          # discriminating-granularity side closes at the meta-theorem
+          # layer (aaveBoundaryCase_certificate). Together with Layer 6-A's
+          # negative-instance certificate and Layer 6-B's positive-instance
+          # certificate at the blocks above, the tridirectional
+          # discriminating-power claim is structurally grounded — rejection
+          # at deployed historical reference (DAO 2016) + acceptance at
+          # deployed production reference (cDAI Compound v2 cToken family)
+          # + structural-neighborhood discrimination at boundary case
+          # (Aave V3 protocol-by-design `flashLoan` at
+          # 0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2 vs structurally
+          # adjacent vulnerable `flashLoanVulnerable`; abstract-pattern-
+          # load-bearing per Question 8e Framing (a) body-shape-vs-trace-
+          # layer discrimination).
+          fail=0
+
+          propext_only_theorems=(
+            "QanaryContracts.aaveContract_satisfies_OZGuardDisciplineGeneral_at_flashLoan"
+            "QanaryContracts.aaveContractAdjacent_violates_OZGuardDisciplineGeneral_at_flashLoanVulnerable"
+            "QanaryContracts.aaveBoundaryCase_certificate"
+          )
+          for thm in "${propext_only_theorems[@]}"; do
+            line=$(echo "$output" | grep -E "^'${thm}' " || true)
+            if [ -z "$line" ]; then
+              echo "::error::theorem ${thm} not found in PrintAxioms output"
+              echo "::error::add a #print axioms entry to QanaryContracts/PrintAxioms.lean"
+              fail=1
+              continue
+            fi
+            echo "$line"
+            if ! echo "$line" | grep -qF "depends on axioms: [propext]"; then
+              echo "::error::${thm} axiom set differs from expected ([propext]-only)"
+              echo "::error::expected: 'depends on axioms: [propext]'"
+              fail=1
+            fi
+          done
+
+          if [ "$fail" -ne 0 ]; then exit 1; fi
+          echo "PASS: all three Layer 6-C theorems carry expected [propext]-only axiom records"
