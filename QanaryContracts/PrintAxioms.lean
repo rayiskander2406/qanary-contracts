@@ -22,6 +22,7 @@ import QanaryContracts.Completeness
 import QanaryContracts.DAOContract
 import QanaryContracts.CompoundContract
 import QanaryContracts.AaveBoundaryCase
+import QanaryContracts.CrossProtocolAudit
 
 open QanaryContracts
 
@@ -432,3 +433,18 @@ theorem audit_guard_protected_blocks_state_aware :
 #print axioms QanaryContracts.aaveContract_satisfies_OZGuardDisciplineGeneral_at_flashLoan
 #print axioms QanaryContracts.aaveContractAdjacent_violates_OZGuardDisciplineGeneral_at_flashLoanVulnerable
 #print axioms QanaryContracts.aaveBoundaryCase_certificate
+
+-- Phase 5 Session 42 (Layer 6-D cross-protocol audit substrate):
+-- Tridirectional discriminating-power certificate composing Layer 6-A
+-- negative-instance, Layer 6-B positive-instance, and Layer 6-C boundary-
+-- case certificates via direct anonymous-constructor ⟨α, β, γ⟩. Carries
+-- [propext]-only axiom record (M-22.2 Tier 1 wrapper-layer absorption,
+-- fifth empirical instance after Layer 6-A Phase 3 master + Phase 4
+-- meta-theorem, Layer 6-B compressed master, and Layer 6-C boundary-
+-- case meta-theorem). Paper §10 Section 10.3 single load-bearing
+-- citable anchor for the tridirectional discriminating-power claim.
+-- CI gating at parallel `Verify Layer 6-D cross-protocol theorem axiom
+-- records` block at build.yml ~466 mirroring Layer 6-A/B/C blocks per
+-- Decision 1 parallel preservation; layer-scope-symmetry across four
+-- parallel CI blocks.
+#print axioms QanaryContracts.tridirectionalDiscriminatingPower_certificate
