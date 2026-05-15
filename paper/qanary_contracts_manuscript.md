@@ -402,4 +402,46 @@ The directive-driven authoring framework, the four-way multi-model adversarial a
 
 ---
 
-*[Sections 8-10 authored across Phase 6 Sessions 51-52 per PADS v1.2 §4 writing order strategy.]*
+## §8 Related Work
+
+This section positions the discriminating-power result against four bodies of prior literature: prior formal verification of smart contracts at large; reentrancy-specific work; compositional formal verification in adjacent domains; and AI-assisted formal verification context. The compression discipline of §1 + §4 + §5 carries through here: survey breadth across the four categories, with sharp positioning of the present contribution against what the surveyed work has and has not previously demonstrated.
+
+### §8.1 Prior formal verification of smart contracts
+
+Three broad classes of prior work have addressed smart contract correctness at varying levels of foundational rigor.
+
+SMT-based static analysis tools — Slither, Mythril, Securify, and Manticore among the widely deployed — operate at the deployment-scale layer with heuristic pattern-matching against known vulnerability classes (Slither, Securify), symbolic execution (Mythril, Manticore), or declarative property checking (Securify). These tools have driven a substantial fraction of pre-deployment audit workflow and are the de facto baseline for industrial smart contract security. Their strength is scalability; their limitation is that pattern recognition does not establish foundational correctness, and structural-adjacency boundaries are precisely where their precision degrades (per §1.2).
+
+Theorem-prover-based work has demonstrated foundational rigor on narrower targets. Bhargavan et al. formalized EVM operational semantics in F* and Coq (POST 2016 and subsequent); Grishchenko, Maffei, and Schneidewind's KEVM (CAV 2018) provided a complete executable EVM semantics in the K framework; Hirai's Lem formalization addressed EVM bytecode semantics for proof assistant integration. Subsequent Coq-based work has formalized individual contracts or contract subsets. The contributions are foundational at the platform-semantics layer; cross-protocol composition of guard-pattern correctness against multiple production protocol instantiations has not been previously demonstrated in this line of work.
+
+Property-based testing tools — Foundry fuzz testing, Echidna, and CertoraProver (specification-based + SMT) — have driven substantial bug discovery at deployment scale. Their strength is finding counterexamples; they do not establish foundational correctness.
+
+Prior formal verification of smart contracts has demonstrated theorem-prover-based formalization of platform semantics or isolated contracts at the foundational layer, or scalable SMT-based pattern recognition at the deployment layer; demonstration of foundational correctness against multiple production protocols with no-retrofit composition discipline has remained an open challenge.
+
+### §8.2 Prior reentrancy-specific work
+
+Reentrancy has received targeted attention across runtime, static, and disclosure-driven layers.
+
+Sereum (Rodler et al., NDSS 2019) introduced runtime monitoring for reentrancy patterns at the EVM execution layer. The approach is deployable but not preventive at the source level, and foundational correctness against the OpenZeppelin guard pattern is not what it claims to establish. Static reentrancy analyzers including SmartScopy (CCS 2018), DEFTECTOR, and ReGuard have applied pattern-recognition discipline targeted at the reentrancy class specifically; their precision is empirically strong for classical reentrancy and weakens at structural-adjacency boundaries (per §1.2) and at non-classical reentrancy variants such as cross-function and read-only patterns.
+
+The read-only reentrancy variant emerged as a recognized attack class following the Curve Finance gauges 2022 disclosure, which prompted audit-firm pattern catalog updates across the industry. Read-only reentrancy is structurally distinct from classical reentrancy (callback reentrancy on view functions returning stale state during a reentrant call rather than on state-mutating functions); it is acknowledged here as future-work scope (per §7.3) rather than within the present discriminating-power claim.
+
+Prior reentrancy-specific work has emphasized pattern-recognition-class detection at runtime or static analysis layers; foundational machine-checked discriminating-power against the OpenZeppelin guard pattern at production protocol scale has not been previously demonstrated.
+
+### §8.3 Related composition discipline work
+
+Compositional formal verification has been extensively developed in adjacent domains. CompCert (Leroy et al.) is the canonical exemplar: compositional correctness proofs for a production-grade C compiler, with subsequent work (CompCertELF, CertiCoq, and others) extending the discipline. Iris (Jung et al., POPL 2015 and subsequent) developed a higher-order concurrent separation logic with a modular proof discipline applied across a wide range of concurrent program verification targets. These works establish that large-scale compositional formal verification is feasible at production-relevant scale when the composition discipline is enforced explicitly.
+
+Within smart contract verification specifically, prior work has demonstrated modular proofs at the single-contract scope; cross-protocol composition of guard-pattern correctness at production scale, under a discipline that forbids retrofit of underlying lemmas (the no-retrofit composition discipline of §4.2), has not been previously demonstrated.
+
+Compositional formal verification has been extensively developed in adjacent domains (compiler correctness, concurrency reasoning); application of the no-retrofit composition discipline to cross-protocol smart contract verification at production scale represents a novel methodological contribution.
+
+### §8.4 AI-assisted formal verification context
+
+Recent work on AI-assisted formal verification has explored LLMs in two roles: proof-tactic synthesis (proposing tactic sequences for proof search at scale) and audit assistance (LLM-generated review of code or specifications). Tactic-synthesis approaches preserve the soundness of underlying proof assistants — the LLM proposes; the kernel checks — but operate at the per-proof granularity rather than at the verification-architecture or audit-discipline level. AI-assisted audit work has typically operated as single-model review; convergence/divergence analysis across multiple independent reasoning models is novel methodology by comparison.
+
+The four-way audit voice augmentation framework of §4.5 — independent runs across Claude (sampled twice: session-context and fresh independent), Grok, and Gemini, with convergence/divergence analysis identifying robust findings — applied to formal verification of production smart contracts under directive-driven authoring discipline, represents a methodologically novel application of AI-assisted formal verification at the intersection of foundational correctness and production-scale security.
+
+This work's multi-model adversarial-and-co-creative audit framework, combined with the directive-driven authoring discipline and machine-checked CI verification, constitutes AI-assisted formal verification methodology whose reproducibility and audit trail are inspectable end-to-end. The companion methodology paper (per Decision 18 separate arXiv track) presents the framework as a research contribution in its own right.
+
+*[Sections 9-10 + §10.3 + §10.4 anchors authored across Phase 6 Sessions 51-52 per PADS v1.2 §4 writing order strategy. Section 9 Limitations drafted at Session 51 Unit 2 (forthcoming this session).]*
