@@ -444,4 +444,30 @@ The four-way audit voice augmentation framework of §4.5 — independent runs ac
 
 This work's multi-model adversarial-and-co-creative audit framework, combined with the directive-driven authoring discipline and machine-checked CI verification, constitutes AI-assisted formal verification methodology whose reproducibility and audit trail are inspectable end-to-end. The companion methodology paper (per Decision 18 separate arXiv track) presents the framework as a research contribution in its own right.
 
-*[Sections 9-10 + §10.3 + §10.4 anchors authored across Phase 6 Sessions 51-52 per PADS v1.2 §4 writing order strategy. Section 9 Limitations drafted at Session 51 Unit 2 (forthcoming this session).]*
+## §9 Limitations
+
+This section enumerates the principal limitations of the discriminating-power claim — what the present work does not establish and why. Several items defer to §3.4 out-of-scope enumeration; this section adds limitations that are within the discriminating-power claim's domain but constrain its scope.
+
+### §9.1 Single attack class
+
+The discriminating-power claim addresses the reentrancy attack class only. The OpenZeppelin guard pattern is correct *for reentrancy* against the surveyed protocols; the methodology has not been demonstrated for other attack classes (oracle manipulation, MEV, governance attacks, cross-chain bridge attacks, front-running, centralization risks, or economic attacks not mediated by reentrancy — per §3.4). Future work expanding the discriminating-power framework to additional attack classes is identified at §7.3; this paper claims discriminating-power only for the reentrancy class.
+
+### §9.2 Single defense pattern
+
+The work addresses the OpenZeppelin reentrancy guard pattern only. Other defensive patterns — `AccessControl`, `Pausable`, `ReentrancyGuardUpgradeable`, the upgradeable proxy pathways, and the broader OpenZeppelin contract library — are not within scope. The no-retrofit composition discipline and the wrapper-layer absorption pattern (§4.2 and §4.3 operational consequence framing) are applicable to other defense patterns by construction, but empirical validation across multiple defense patterns at production scale is future work.
+
+### §9.3 Constructed mutant boundary case
+
+The Layer 6-C boundary case includes one constructed variant — `flashLoanVulnerable`, a minimal-diff mutant of production Aave V3 `flashLoan` (per §5.5). Per the §1.3 reframing, this is mutation testing for formal proofs: a controlled experiment that isolates a single security-critical structural difference, of a kind naturally-occurring near-misses rarely provide. The constructive boundary case is therefore methodologically informative on its own terms; it is not a substitute for coverage of the natural-occurring near-miss landscape, which would strengthen the empirical base further. Identifying and formalizing additional real historical near-miss instances (the Curve gauges 2022 read-only-reentrancy class, the Lendf.Me 2020 ERC-777 callback class, and similar) is acknowledged future work.
+
+### §9.4 Solidity-source-level abstraction
+
+The formalization operates at Solidity source level (per §3.2) rather than at raw EVM bytecode. Compilation correctness from the formalized Solidity to deployed bytecode is therefore a trust assumption (per §3.3). Recent EVM-level formalization work (per §8.1 — Bhargavan et al., the KEVM line, and adjacent efforts) provides foundation for a future EVM-level extension of the discriminating-power framework; the present paper's scope is the Solidity-source-level claim conditional on `solc` correctness for the analyzed source files.
+
+### §9.5 Trust assumptions
+
+Standard formal verification trust assumptions apply: Lean 4 kernel correctness, mathlib4 module correctness, and the pinned dependency graph at the tagged commits (per §3.3 and §6.6). The honest-borrower-at-protocol-invariant-computation-only assumption (per §3.3) constrains the discriminating-power claim — borrowers may be adversarial in the §3.1 sense, but the protocol's own internal accounting code is assumed to execute as written rather than be replaced by an attacker-controlled implementation. Expansion to a more aggressive attacker-controlled-protocol threat model is future work. The work makes no consensus-layer behavioral assumption; properties are not contingent on miner or validator behavior.
+
+---
+
+*[Section 10 + §10.3 + §10.4 anchors authored at Phase 6 Session 52 per PADS v1.2 §4 writing order strategy. Phase 6 closes at Session 52 with tag `v1.5-phase6-closure` per Decision 21.]*
