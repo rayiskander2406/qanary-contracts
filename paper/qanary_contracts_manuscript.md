@@ -146,4 +146,64 @@ Axiom record discipline is enforced at the CI level. Each theorem is verified ag
 
 ---
 
-*[Sections 3-10 authored across Phase 6 Sessions 47-51 per PADS §4 writing order strategy.]*
+## §3 Threat Model
+
+This section specifies the formal threat boundary against which the discriminating-power claim of §1.3 is established. We make adversary capabilities, the state-machine abstraction level at which formalization operates, the trust assumptions on which our proofs depend, and the explicit out-of-scope items all visible up-front. Doing so allows reviewers to evaluate the contribution claim's scope precisely and serves as the canonical reference point for the substantive material in §5 about what is and is not proved.
+
+### §3.1 Adversary model
+
+The adversary controls one or more Externally-Owned Accounts (EOAs) on the target chain and may deploy and call arbitrary smart contracts. The adversary is permitted to compose cross-protocol interactions via the callable-contract pattern that underlies the reentrancy attack class — that is, to deploy contracts conforming to the callback interfaces (`receive`, `fallback`, `tokensReceived`, `IFlashLoanReceiver.executeOperation`, etc.) that the protocols under analysis use to invoke external behavior during the execution of a guarded function. The adversary may also coordinate sequences of transactions across blocks where coordination across atomic-transaction boundaries is permitted by the underlying chain semantics.
+
+The adversary has no special protocol-level privileges. The adversary is not a protocol owner, is not on a whitelist, is not a validator or block proposer, and holds no role-based access-control credentials at the protocols under analysis. In particular, the adversary cannot pause the protocol, change interest-rate parameters, replace the implementation behind an upgradeable proxy, or otherwise exercise governance-mediated authority. Where a protocol exposes a `nonReentrant`-guarded function, the adversary's only routes to that function are the publicly callable interfaces; the adversary cannot bypass the guard pattern by privileged means.
+
+The adversary may control multiple addresses. Sybil-resistance analysis is not in scope; for the purposes of this threat model, all adversary-controlled addresses are treated collectively as the adversary, and a defense that holds against a single adversary-controlled address holds against multiple coordinated addresses under the same control. The adversary's computation is bounded by standard EVM gas-limit constraints (per-transaction block gas limit and per-call sub-budgets); no quantum-computational, oracle-prediction, or non-classical computational assumptions are made on either side.
+
+### §3.2 State-machine abstraction level
+
+The formalization operates at Solidity-level semantics rather than at raw EVM bytecode level. The state machine captures storage layout at slot granularity, function call sequencing in a call-stack-aware manner, the boundary semantics of external CALL opcodes (including the synchronous-return-with-shared-storage property that produces the reentrancy setting), and the atomic-transaction guarantees of the underlying chain (whole-transaction rollback on revert; observable state mutations only on transaction success).
+
+The CALL behavior modeled is the one load-bearing for the reentrancy attack class. When contract A makes an external call to contract B, execution transfers synchronously to B; A's local stack frame is preserved across the transition; A's storage state at the moment of the CALL is shared with B; if B is attacker-controlled, B may invoke functions on A — including functions other than the one currently mid-execution — and observe A's intermediate storage state during that re-entry. The OpenZeppelin guard pattern's correctness claim is precisely the claim that the entry-time storage check on `_status` blocks every such re-entry into any function carrying the `nonReentrant` modifier on the same contract instance, regardless of whether the original invocation has returned.
+
+Several abstraction-level details are deliberately out of scope at the model layer. Gas accounting is assumed sufficient for the analysis-relevant operations (we do not formally model gas exhaustion mid-call as a separate failure mode; the discriminating-power claim is about reachability of attacker-favorable states under successful execution, not about denial-of-service via gas). Precompiled contract semantics (e.g., `ecrecover`'s precise input/output behavior, MODEXP edge cases) are not modeled at the byte level; calls to precompiles return abstract symbolic results sufficient for the surrounding control flow. Bytecode-specific edge cases such as SELFDESTRUCT semantics under particular redeployment patterns are likewise abstracted; the contracts under analysis do not exercise SELFDESTRUCT, so this abstraction is benign for the present scope. Compilation correctness from the formalized Solidity source to deployed bytecode is itself a trust assumption, addressed at §3.3.
+
+### §3.3 Trust assumptions
+
+Four trust assumptions underpin the discriminating-power claim. Each is standard in the formal-verification literature for smart-contract source-level proofs; we make them explicit so reviewers can audit the boundary between what is mechanically established and what is assumed.
+
+**Solidity compiler correctness.** Our proofs operate at the Solidity source level. Deployed bytecode correctness derives from the Solidity compiler's correct compilation of that source (specifically, `solc` at the version specified in each protocol's deployment metadata; commonly `0.8.x` for the in-scope production protocols). Compiler-correctness verification is itself an active research area; we do not attempt to subsume that work within the present scope. Reviewers may treat our results as conditional on `solc` correctness for the specific source files analyzed.
+
+**Lean 4 kernel and mathlib4 correctness.** As is standard for any Lean 4 formalization, the proofs are mechanically checked under the assumption that the Lean 4 kernel correctly implements its type theory and that the imported mathlib4 modules correctly state the mathematical results they claim. Lean 4's kernel is small and has received community scrutiny; the imported mathlib4 modules (general tactic infrastructure, finite-data-structure reasoning, propositional logic) are pinned via `lakefile.toml` dependency declarations and locked through `lake-manifest.json`, with the Lean compiler version pinned separately via `lean-toolchain`. The exact dependency graph is reproducible from the tagged commit.
+
+**Honest borrower assumption per real-contract instance.** For the Compound v2 cToken positive instance, the discriminating-power claim concerns the guard pattern's correctness against reentrancy; it does not require borrowers to behave honestly in any economic sense (interest-rate solvency, collateral maintenance, liquidation responsiveness). Borrowers may be adversarial in the §3.1 sense; what is assumed is that the *protocol-level* invariants the cToken family relies on (such as correct accrual of interest at withdrawal time) are computed by the protocol's own accounting code rather than supplied by the caller. The same holds for the Aave V3 boundary case: the borrower is assumed adversarial, the flash-loan protocol's repayment-verification logic is assumed to execute as written.
+
+**No miner or validator behavior assumption.** The properties proved are not contingent on miner or validator behavior. We do not assume timing constraints, transaction-ordering constraints, reorg-resistance constraints, or proposer honesty. The reentrancy attack class is mediated by smart-contract execution within a single transaction, not by consensus-layer behavior; our claim therefore inherits no consensus-layer trust requirement.
+
+### §3.4 Out-of-scope items
+
+The discriminating-power claim addresses the reentrancy attack class against contracts that adopt (or fail to adopt) the OpenZeppelin guard pattern. Several attack classes that have produced significant losses in production DeFi are explicitly out of scope for this paper.
+
+**Oracle manipulation attacks.** Flash-loan-enabled price-oracle manipulation — the attack class that produced the Cream Finance October 2021 incident (≈US$130M) and a substantial fraction of cumulative DeFi losses — is structurally distinct from reentrancy. The oracle attack manipulates the *input* to a price-dependent calculation rather than re-entering a guarded function. Our methodology has nothing to say about oracle-manipulation defense.
+
+**MEV (maximal extractable value) and transaction-ordering attacks.** Sandwich attacks, arbitrage extraction, and other forms of value extraction mediated by mempool ordering or proposer behavior are out of scope. These attacks operate above the smart-contract execution layer at which our formalization sits.
+
+**Governance attacks.** Proposal-passing exploits, governance-token-concentration attacks, vote-buying, and timelock bypasses are out of scope. The threat model assumes the governance configuration of each in-scope protocol is correctly set; governance-mediated attacks against those configurations are a separate research area.
+
+**Cross-chain bridge attacks.** Bridge protocols introduce trust assumptions at the chain-boundary layer that are absent from the single-chain analysis our formalization performs. Bridge-protocol-specific vulnerabilities are out of scope.
+
+**Front-running attacks.** Mempool-level transaction-front-running attacks — including frontrunning of user transactions by searchers, by validators, or by other users — are out of scope.
+
+**Centralization risks.** Admin keys, upgradeable-proxy implementations under privileged operations, role-based emergency pauses, and similar centralization-mediated attacks are out of scope. Some in-scope protocols expose such mechanisms; our claim is about the guard pattern's correctness when invoked through the publicly callable surface, not about the trust model surrounding privileged operations.
+
+**Economic attacks not mediated by reentrancy.** Liquidation cascades, interest-rate manipulation that does not involve a reentrant call, collateral-ratio exploits operating purely through external state observation, and similar economic-model attacks are out of scope.
+
+### §3.5 Threat boundary summary
+
+In scope: the reentrancy attack class against the OpenZeppelin guard pattern, formalized at Solidity source level for the three production protocol instantiations enumerated in §1.3 — DAO 2016 (negative instance), Compound v2 cToken family (positive instance), and Aave V3 `flashLoan` paired with the `flashLoanVulnerable` minimal-diff mutant (boundary case). The discriminating-power claim is that the methodology catches the negative instance, clears the positive instance, and distinguishes the boundary pair; no broader claim about other attack classes or other protocols is made by the present paper.
+
+Out of scope: every attack class enumerated at §3.4. The methodology's potential extension to other attack classes (oracle manipulation, MEV, governance, cross-chain) is acknowledged as future work in §9 but not claimed in this paper.
+
+The tridirectional discriminating-power claim's scope is therefore narrow and specific: a single attack class, a single defense pattern, three production protocol instantiations plus one minimal-diff mutant for boundary-case isolation. Within that scope the claim is machine-checked end-to-end. Outside that scope, no claim is made.
+
+---
+
+*[Sections 4-10 authored across Phase 6 Sessions 48-52 per PADS v1.2 §4 writing order strategy. Section 4 Methodology Overview drafted at Session 48 Unit 2 (forthcoming this session).]*
