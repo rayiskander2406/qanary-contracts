@@ -264,4 +264,75 @@ The methodology framework underpinning this work — the no-retrofit composition
 
 ---
 
-*[Sections 5-10 authored across Phase 6 Sessions 49-52 per PADS v1.2 §4 writing order strategy.]*
+## §5 Formalization
+
+This section presents the substantive substrate of the discriminating-power claim: the formal definitions and predicates underpinning the verification, the inventory of the thirteen machine-checked theorems that establish the claim, the per-layer presentation of the negative-instance, positive-instance, and boundary-case proofs, the capstone meta-theorem composing the three layers, and the reproducibility anchor for verifying the corpus end-to-end. Full theorem statements, complete axiom records, and proof-skeleton excerpts are deferred to the §10.3 appendix; the present section provides the structural narrative and key-result statements that an IEEE S&P 2027 reviewer needs to evaluate the substantive claim before consulting the appendix.
+
+### §5.1 Formal definitions and predicates
+
+The formalization rests on three load-bearing predicates over the Solidity-source state-machine model of §3.2.
+
+The **reentrancy predicate** characterizes the reentrancy attack class at the level our model resolves. Informally: a contract execution exhibits reentrancy if there exists a call trace in which an external CALL from a function `f` of contract `A` transfers execution to an attacker-controlled callee `B` that, before `f`'s frame returns, invokes a function `g` of `A` (where `g` may be `f` itself) and observes storage state that `f` has modified but not yet completed updating. The predicate is call-stack-aware, storage-mutation-aware, and external-call-boundary-aware; it captures classical single-function reentrancy, cross-function reentrancy, and the storage-observation aspect of read-only reentrancy as instances. Full predicate definition (with type signatures over the Lean 4 trace data structure) appears in §10.3.
+
+The **guard-pattern correctness predicate** characterizes what it means for the OpenZeppelin reentrancy guard to be correctly applied at a function. Informally: a function `f` of contract `A` carries the guard correctly if its entry condition checks `_status == _NOT_ENTERED`, its body sets `_status = _ENTERED` before any external CALL, its exit resets `_status = _NOT_ENTERED`, and these accesses target the same storage slot that all other guarded functions on `A` use. The predicate composes with the reentrancy predicate at the meta-level: a function carrying the guard correctly cannot exhibit reentrancy under the model.
+
+The **discriminating-power predicate** is the meta-level claim that ties the methodology to its evaluation: a verification methodology *discriminates* between guard-protected and guard-vulnerable instances if it derives the reentrancy predicate for vulnerable instances, derives the guard-pattern correctness predicate for protected instances, and distinguishes structurally-adjacent vulnerable variants from their safe counterparts. The tridirectional discriminating-power claim of §1.3 is the assertion that our formalization satisfies this meta-predicate against the three production protocol instantiations of §2.4 plus the minimal-diff mutant of §5.5. Full predicate definitions and the dependent-type declarations underpinning them appear in §10.3.
+
+### §5.2 Theorem inventory
+
+Thirteen theorems machine-check the discriminating-power claim. The inventory below summarizes each theorem at the level of an informal one-line statement; the precise Lean 4 statements (with full type signatures, hypothesis lists, and the `#print axioms` output) appear in §10.3.
+
+| Layer | Count | Theorem(s) | Informal statement | Axiom record |
+|---|---:|---|---|---|
+| 6-A | 1 + 5 | DAO reentrancy derivation + supporting lemmas | The DAO 2016 attack trace is derivable from the contract's source semantics under the reentrancy predicate | minimal |
+| 6-B | 1 + 2 | Compound v2 cToken correctness + supporting lemmas | The cToken family's withdrawal path correctly implements the OpenZeppelin guard pattern under our reentrancy predicate | minimal |
+| 6-C | 2 + 1 | Aave V3 `flashLoan` correctness + `flashLoanVulnerable` failure + CEI lemma | Production `flashLoan` satisfies guard-pattern correctness; the minimal-diff mutant `flashLoanVulnerable` fails it | minimal |
+| 6-D | 1 | Tridirectional discriminating-power capstone | Composed: methodology catches the negative instance, clears the positive instance, and distinguishes the boundary pair | `[propext]` only |
+
+Each layer's theorems are gated by an independent CI block at `build.yml` lines 287, 356, 408, and 464 respectively. The CI runs `lake build` plus `lake build QanaryContracts.PrintAxioms` on every push, mechanically verifying both that the theorems still type-check against the pinned `mathlib4` dependency graph and that their axiom records match the expectations recorded in §10.3. No theorem is admitted with `sorry`, `admit`, or any user-introduced `axiom` declaration; all twelve prior-layer theorems record minimal `mathlib4` axiom dependencies, and the capstone records `[propext]` only.
+
+### §5.3 Layer 6-A: negative instance (DAO 2016)
+
+The Layer 6-A negative instance reproduces the classical reentrancy attack against the DAO 2016 contract. The `splitDAO` function performs an external transfer of native ETH to a user-controlled recipient before decrementing the user's recorded balance, opening a window in which a recipient contract can re-invoke `splitDAO` against the same un-decremented balance until the contract is drained.
+
+Our formalization models the relevant subset of the DAO contract source — the `splitDAO` function's storage layout, balance accounting, and external-call structure — at the abstraction level of §3.2. The Layer 6-A capstone theorem (one of six in this layer) states that under the reentrancy predicate of §5.1, the attacker-controlled re-entry path is *derivable* from the DAO contract source: there exists a constructible call trace, expressible in our state-machine model, in which the re-entry succeeds and the contract's invariant (balance-sum equals total-deposits) is broken. The five supporting lemmas decompose the derivation into the load-bearing pieces — call-stack interleaving, storage-observation, balance-update sequencing, and the absence of any guard-pattern protection — that together discharge the capstone.
+
+The DAO contract predates the OpenZeppelin guard library. Its inclusion as the negative instance is therefore not a guard-pattern *failure* but a guard-pattern *target*: the DAO formalization demonstrates that the methodology recognizes the vulnerability class the guard pattern was created to address, even where the guard itself is absent. This complements the Layer 6-B and 6-C results, which establish recognition of the guard's *behavior* when present. Full theorem statements, hypothesis structure, and proof-skeleton outline appear in §10.3.
+
+### §5.4 Layer 6-B: positive instance (Compound v2 cToken family)
+
+Compound v2's cToken family represents the largest and longest-running production deployment of the OpenZeppelin guard pattern within DeFi lending. Each cToken's withdrawal-path functions (`redeem`, `redeemUnderlying`, the underlying `transfer` flows) carry the `nonReentrant` modifier sourced from the OpenZeppelin library; the protocol has stress-tested this pattern in production for years without a confirmed reentrancy incident against the guard itself.
+
+The Layer 6-B target theorem (one of three in the layer) states that the cToken withdrawal path correctly implements the OpenZeppelin guard pattern under our predicate of §5.1: any execution trace conforming to the cToken withdrawal path satisfies the guard-pattern correctness predicate, and consequently no reentrancy trace is constructible against it. Two supporting lemmas decompose the result: a guard-invariant lemma showing that the storage slot tracking guard state is consistently set before any external call and reset after, and a cross-function safety lemma showing that the guard's protection extends across the multiple functions of the cToken interface that share the same `_status` slot.
+
+The Layer 6-B capstone is structured as a thin wrapper module that imports the supporting lemmas and discharges the target theorem by composition without modifying either lemma — an instance of the wrapper-layer absorption pattern of §4.3, which preserves axiom-record minimality through the composition. The capstone records minimal axiom dependence (no propositional extensionality required at this layer; the result is provable in the pure intensional fragment of Lean 4's type theory). Full theorem statements, the wrapper module's structure, and the per-lemma proof skeletons appear in §10.3.
+
+### §5.5 Layer 6-C: boundary case (Aave V3 `flashLoan` vs `flashLoanVulnerable`)
+
+The Layer 6-C boundary case is the methodological core of the discriminating-power claim. Aave V3's Pool contract — deployed on Ethereum mainnet at `0x87870bca3f3fd6335c3F4ce8392D69350B4fA4E2` — implements `flashLoan` according to a checks-effects-interactions discipline that is guard-pattern correct by construction: the loan is recorded, funds are transferred to the borrower, the borrower's `IFlashLoanReceiver.executeOperation` callback is invoked, and the protocol verifies repayment plus fee on return. The borrower-supplied callback target cannot re-enter the Pool's guarded surface during the loan window because the guard's `_status` slot is set to `_ENTERED` for the duration of the call.
+
+To exercise the methodology's discriminating power against structurally-adjacent variants — the regime where pattern recognition is known to degrade per §1.2 — we construct `flashLoanVulnerable` as a minimal-diff mutant of production `flashLoan`. The mutant differs from production in a single security-critical respect: its body fails to engage the guard correctly at the callback boundary, leaving a reentrancy window during the borrower's execution. All other aspects — function signature, callback interface, surface-level control flow, surface API — are identical. The construction is mutation testing for formal proofs: where naturally-occurring near-misses combine multiple structural differences with confounding semantic context, the minimal-diff mutant isolates the precise security-critical structural difference, enabling a controlled experiment that natural cases rarely provide.
+
+The Layer 6-C theorems formalize the discriminating power against this pair. The first target theorem states that production `flashLoan` satisfies guard-pattern correctness under the §5.1 predicate. The second target theorem states that `flashLoanVulnerable` fails guard-pattern correctness — equivalently, that a reentrancy trace is constructible against the mutant under the same predicate. A supporting CEI-pattern preservation lemma underwrites the first theorem and is consumed by the second's failure proof at the structural-adjacency boundary where the mutant deviates.
+
+The pair together establishes the boundary-case leg of the discriminating-power claim: the methodology distinguishes safe `flashLoan` from structurally-adjacent vulnerable `flashLoanVulnerable` at the precise structural-adjacency boundary the boundary case is designed to probe. Full theorem statements, the mutant's diff specification against production `flashLoan`, and the per-theorem proof skeletons appear in §10.3.
+
+### §5.6 Layer 6-D: tridirectional capstone
+
+The Layer 6-D capstone meta-theorem composes the three protocol-instantiation results into the tridirectional discriminating-power claim. Its statement, informally: if the Layer 6-A negative-instance derivation, the Layer 6-B positive-instance correctness theorem, and the Layer 6-C boundary-case pair all hold, then the methodology satisfies the discriminating-power predicate of §5.1 against the production protocol instantiations of §2.4 plus the minimal-diff mutant of §5.5. The capstone is proven by direct conjunction of the three prior-layer theorems — a wrapper construction in the sense of §4.3 — without modification of any underlying protocol-instantiation proof during composition.
+
+This composition shape is the operational signature of the no-retrofit composition discipline of §4.2. The three protocol-instantiation files were sealed at `v1.3-layer6-closure` prior to capstone authoring; capstone construction had no path to modify them; the capstone nevertheless composed by direct conjunction. We treat this as the first cross-protocol stress-test PASS of the discipline against non-trivial protocol-semantics divergence: Compound v2's persistent-accounting model and Aave V3's repay-within-transaction model differ in structural ways that a retrofit-permissive workflow could have used to shape the underlying lemmas toward a common composition target. The discipline forbade that path; the composition succeeded anyway. The interpretation is that the OpenZeppelin guard pattern's correctness is in fact portable across the protocol-instantiation boundary in a way that survives the no-retrofit constraint.
+
+The capstone's axiom record is `[propext]` only — propositional extensionality, the standard `mathlib4` classical axiom that allows logically equivalent propositions to be considered equal. No other classical axiom (choice, excluded middle, etc.) is invoked anywhere in the corpus, and no user-introduced `axiom` declaration appears at any layer. The wrapper-layer absorption discipline of §4.3 preserves this minimality: the capstone's `#print axioms` record is exactly the union of the three prior-layer theorems' axiom records, and the union is `[propext]` because that is the strongest single axiom carried by any prior-layer theorem.
+
+Full capstone theorem statement, wrapper module structure, and the verbatim `#print axioms` output appear in §10.3.
+
+### §5.7 Reproducibility
+
+The corpus is reproducible end-to-end from any of two tagged commits. The substantive substrate is sealed at `v1.3-layer6-closure`; the methodology framework canonization is sealed at `v1.4-methodology-housekeeping`. Reviewers can check out either tag and re-run `lake build` to verify the proof corpus, and `lake build QanaryContracts.PrintAxioms` (903-job target) to verify the axiom records of every theorem against the expectations recorded in §10.3.
+
+The dependency graph is pinned and locked. The Lean compiler version is recorded in `lean-toolchain`; the `mathlib4` dependency version is recorded in `lakefile.toml` and locked to a specific commit hash via `lake-manifest.json`. The four parallel CI blocks at `build.yml` lines 287, 356, 408, and 464 re-run on every push and would surface any drift. Repository structure (with the `paper/`, `QanaryContracts/`, and `methodology/` directories holding manuscript, Lean source, and methodology framework canonical artifacts respectively) and the full `lake build` reproduction commands appear in §10.3.
+
+---
+
+*[Sections 6-10 authored across Phase 6 Sessions 50-52 per PADS v1.2 §4 writing order strategy.]*
