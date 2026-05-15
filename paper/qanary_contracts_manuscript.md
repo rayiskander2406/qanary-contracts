@@ -335,4 +335,49 @@ The dependency graph is pinned and locked. The Lean compiler version is recorded
 
 ---
 
-*[Sections 6-10 authored across Phase 6 Sessions 50-52 per PADS v1.2 §4 writing order strategy.]*
+## §6 Implementation and Evaluation
+
+This section presents the practitioner-facing evidence base for the discriminating-power claim: repository structure, the size of the formalization corpus by layer, continuous-integration metrics, the axiom-record discipline as enforced at the CI level, the proof-engineering trajectory that produced the corpus, and the tagged-commit reproducibility procedure that allows reviewers to verify the verification.
+
+### §6.1 Repository structure
+
+The repository is organized at three top-level locations: `paper/` (the manuscript, the architectural-decision document, the multi-model audit findings + adjudication artifacts, the per-session closure reports), `QanaryContracts/` (the Lean 4 source organized by Layer 6-A/B/C/D with supporting modules), and `methodology/` (canonical artifacts for the methodology framework referenced thinly in §4 and pointer-tabled in §10.4 per the boundary discipline of §1). The continuous-integration configuration sits at `build.yml` at the repository root. All artifacts are reachable from any tagged commit, so a reviewer who checks out a single tag obtains the consistent state across manuscript, source, methodology canonical artifacts, and CI configuration.
+
+### §6.2 Lines of Lean source by layer
+
+The formalization corpus is approximately 8,500 lines of Lean 4 source across the four protocol-instantiation layers and supporting infrastructure. Per-layer line counts (approximate; precise per-file attribution verified at §10.3):
+
+| Component | Lines of Lean source | Theorems |
+|---|---:|---:|
+| Layer 6-A (DAO 2016 negative instance) | ~656 | 6 |
+| Layer 6-B (Compound v2 positive instance) | ~517 | 3 |
+| Layer 6-C (Aave V3 boundary case incl. mutant) | ~770 | 3 |
+| Layer 6-D (tridirectional capstone) | ~260 | 1 |
+| Supporting modules and lemmas | ~6,335 | — |
+| **Total formalization corpus** | **~8,538** | **13 theorems** |
+
+Per-file contribution and full theorem-to-file mapping appear in §10.3.
+
+### §6.3 CI verification metrics
+
+Continuous integration runs four parallel verification blocks at `build.yml` lines 287, 356, 408, and 464 — one per Layer 6-A/B/C/D — on every push. The default `lake build` target compiles and type-checks the corpus at 901 jobs; the `lake build QanaryContracts.PrintAxioms` target additionally runs the per-theorem `#print axioms` introspection at 903 jobs (the two extra jobs are the axiom-record verification passes for the capstone-relevant theorems). Wall-clock CI verification runs in the order of minutes per push on standard GitHub Actions runners; the build is incremental within a session and from-scratch on dependency changes. CI failure on any block — type-check failure, axiom-record drift, or supporting-lemma regression — surfaces immediately in the pull-request status.
+
+### §6.4 Axiom-record discipline
+
+Every theorem in the corpus is verified against an explicit axiom-record expectation. The capstone meta-theorem at Layer 6-D records `[propext]` only — propositional extensionality, the standard `mathlib4` classical axiom that allows logically equivalent propositions to be considered equal. All twelve prior-layer theorems record minimal `mathlib4` axiom dependencies; none invokes choice, excluded middle, or any other classical extension beyond `[propext]`. No theorem in the corpus is admitted with `sorry`, with `admit`, or with any user-introduced `axiom` declaration; the project introduces zero new axioms over the Lean 4 + `mathlib4` baseline. The CI runs `#print axioms` against each theorem on every push and fails the build on any record drift. Full per-theorem axiom records appear in §10.3.
+
+### §6.5 Proof-engineering trajectory
+
+The corpus was developed across six methodology phases. Phase 1 established the Lean 4 + `mathlib4` foundations and the Solidity-source semantic abstraction of §3.2. Phases 2 through 4 sealed the per-protocol-instantiation theorems — Phase 2 the Layer 6-A DAO 2016 negative instance, Phase 3 the Layer 6-B Compound v2 cToken positive instance, Phase 4 the Layer 6-C Aave V3 boundary case including the minimal-diff mutant of §5.5. Phase 5 sealed the Layer 6-D capstone meta-theorem and canonized the methodology framework (the no-retrofit composition discipline of §4.2, the wrapper-layer absorption pattern of §4.3, and the family-level meta-pattern context, with canonical artifacts at the `methodology/` directory pointer-tabled at §10.4). Phase 6 — the present manuscript-writing phase — produced the prose-narrative artifact under the same directive-driven authoring discipline that governed the proof phases.
+
+The directive-driven discipline is operationally visible in the repository: every substantive proof-authoring or manuscript-authoring session executes against an explicit opening directive that specifies success criteria, hard stops, atomic-commit boundaries, and per-unit caps; every session closes with a closure report documenting deliverables, cap utilization, and carrying-forward state. Across all six phases, the cumulative directive corpus plus closure reports plus tagged commits collectively make the trajectory inspectable end-to-end. A reviewer who wants to see how a given proof was authored, what audit findings drove which manuscript revisions, or what page-budget compression decisions shaped the present manuscript, can read the directive corpus and closure reports as a continuous record of the work. This is the operational shape of the AI-assisted research methodology described at §4.5: every step is a recorded artifact, available for inspection or replication.
+
+### §6.6 Tagged-commit reproducibility
+
+The corpus is reproducible end-to-end from a tagged commit. The substantive substrate is sealed at `v1.3-layer6-closure`; the methodology framework canonization is sealed at `v1.4-methodology-housekeeping`. A reviewer who checks out either tag and runs `lake build` obtains the 901-job green build of the substrate plus supporting modules; running `lake build QanaryContracts.PrintAxioms` additionally runs the 903-job axiom-record verification pass.
+
+The dependency graph is pinned and locked. The Lean compiler version is recorded in `lean-toolchain`; the `mathlib4` dependency version is recorded in `lakefile.lean` and locked to a specific commit hash via `lake-manifest.json`. The four parallel CI blocks at `build.yml` lines 287, 356, 408, and 464 re-run on every push and would surface any drift in the dependency graph or the corpus. Full reproduction commands — including the precise `git checkout` invocations, the `lake build` and `lake build QanaryContracts.PrintAxioms` invocations, and the expected axiom-record outputs per theorem — appear in §10.3.
+
+---
+
+*[Sections 7-10 authored across Phase 6 Sessions 50-52 per PADS v1.2 §4 writing order strategy.]*
