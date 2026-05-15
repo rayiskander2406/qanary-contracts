@@ -380,4 +380,26 @@ The dependency graph is pinned and locked. The Lean compiler version is recorded
 
 ---
 
-*[Sections 7-10 authored across Phase 6 Sessions 50-52 per PADS v1.2 §4 writing order strategy.]*
+## §7 Discussion
+
+This section frames the implications of the tridirectional discriminating-power result, previews the principal limitations (full discussion at §9), sketches future-work directions, and locates the methodological significance of the result for AI-assisted formal verification more broadly.
+
+### §7.1 Implications
+
+At the methodology level, the result extends what machine-checked verification can deliver for smart-contract security beyond the pattern-recognition layer at which auditors operate and beyond the toy-example layer that has constrained much prior academic verification work. The tridirectional discriminating-power claim is established against production-deployed Solidity source for the OpenZeppelin guard pattern — specifically the production sources of Compound v2 and Aave V3 plus the historical DAO 2016 contract — rather than against simplified models of those protocols. At the ecosystem level, the contracts whose correctness our results address collectively secure substantial production deposits (see §2.4 and §5.4 for current figures); the methodology's scope is therefore at ecosystem-load-bearing scale, not research-prototype scale. At the discipline level, the no-retrofit composition discipline of §4.2 establishes a stronger empirical claim than co-developed composition: the three protocol-instantiation proofs were sealed before the capstone meta-theorem was authored, the capstone composed by direct conjunction without modification of any underlying proof, and we read this as evidence that the OpenZeppelin guard pattern's correctness is in fact portable across protocol-instantiation boundaries rather than an artifact of co-developed proofs.
+
+### §7.2 Brief limitations preview
+
+The discriminating-power claim's scope is narrow. The methodology addresses one attack class (reentrancy), against one defense pattern (the OpenZeppelin guard), across three production protocol instantiations plus one constructed minimal-diff mutant for boundary-case isolation. The boundary case includes the constructed `flashLoanVulnerable` mutant of §5.5; per the §1.3 reframing, this is mutation testing for formal proofs — a controlled experiment that naturally-occurring near-misses rarely provide — rather than coverage of the natural-occurring near-miss landscape itself. The formalization operates at Solidity source level; deployed-bytecode correctness derives from compiler correctness, which §3.3 records as a trust assumption. Full limitations discussion appears at §9.
+
+### §7.3 Future work
+
+Several extensions are natural. The methodology is candidate for application to other reentrancy variants — read-only reentrancy at protocols whose view functions feed downstream consumers (the Curve gauges 2022 incident is the canonical case), cross-function reentrancy at protocols whose multiple guarded functions share state in ways the guard's storage-slot semantics may not fully capture. The methodology is also candidate for application to other defense patterns from the OpenZeppelin family — `AccessControl`, `Pausable`, `ReentrancyGuardUpgradeable`, the Ownable upgrade pathway — each of which carries its own correctness predicate amenable to the same tridirectional discriminating-power treatment. Beyond reentrancy and beyond OpenZeppelin, the methodology framework canonical artifacts presented in the companion paper (per Decision 18) enable application to formal verification more broadly, including non-smart-contract targets where the no-retrofit composition discipline addresses the same proof-brittleness pain point. Continuous-integration-driven verification at protocol upgrade events is a final natural extension: the no-retrofit composition discipline preserves prior verification work as protocols evolve, supporting incremental re-verification without retrofit.
+
+### §7.4 Methodological significance
+
+The directive-driven authoring framework, the four-way multi-model adversarial and co-creative audit at every phase boundary, the machine-checked CI verification of every theorem and its axiom record, and the zero user-introduced-axiom posture together constitute a methodology for AI-assisted formal verification whose properties are auditable end-to-end. The framework is reusable: any formal verification target with sufficient substantive substrate maturity can apply the same discipline. Its application here — to a smart-contract reentrancy-defense correctness claim at production scale — is one instantiation; the companion methodology paper presents the framework as a research contribution in its own right, with its own arXiv track per Decision 18.
+
+---
+
+*[Sections 8-10 authored across Phase 6 Sessions 51-52 per PADS v1.2 §4 writing order strategy.]*
