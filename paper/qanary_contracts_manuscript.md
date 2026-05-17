@@ -482,4 +482,72 @@ What this work contributes to the field is a foundational, machine-checked discr
 
 ---
 
-*[§10.3 + §10.4 appendix anchors authored at Phase 6 Session 52 Unit 2 per PADS v1.2 §4 writing order strategy. Phase 6 closes at Session 52 with tag `v1.5-phase6-closure` per Decision 21.]*
+## §10.3 Appendix: Theorem Statements, Axiom Records, and Reproduction
+
+This appendix is the substantive substrate anchor for the discriminating-power claim. It absorbs the full-statement and axiom-record detail deferred from §5 and §6, so a reviewer can verify the corpus end-to-end. Full Lean 4 source — with exact type signatures, dependent-type declarations, and definitions — is in the repository at the tagged commit `v1.3-layer6-closure`; the paraphrases below state what each theorem establishes at the level a reviewer needs before consulting the source.
+
+### §10.3.1 Theorem statements
+
+The corpus comprises thirteen theorems across four layers, matching the §5.2 inventory exactly.
+
+*Layer 6-A — DAO 2016 negative instance (1 target + 5 supporting = 6).* The target theorem states that, under the reentrancy predicate of §5.1, an attacker-controlled re-entry call trace against the formalized DAO `splitDAO` source is *constructible*, and that this trace breaks the contract's balance-sum invariant. The five supporting lemmas discharge the pieces of the derivation: call-stack interleaving, storage-observation before balance update, balance-update sequencing, external-call-boundary placement, and the absence of any guard-pattern protection.
+
+*Layer 6-B — Compound v2 cToken positive instance (1 target + 2 supporting = 3).* The target theorem states that every execution trace conforming to the cToken withdrawal path satisfies the guard-pattern correctness predicate of §5.1, so no reentrancy trace is constructible against it. A guard-invariant lemma shows the `_status` slot is set before any external call and reset after; a cross-function safety lemma shows the protection extends across the cToken interface functions sharing that slot. The target is discharged by a thin wrapper that composes the two lemmas without modifying either, preserving axiom-record minimality.
+
+*Layer 6-C — Aave V3 boundary case (2 target + 1 supporting = 3).* The first target theorem states that production `flashLoan` satisfies guard-pattern correctness under the §5.1 predicate. The second target theorem states that the minimal-diff mutant `flashLoanVulnerable` fails it — equivalently, that a reentrancy trace is constructible against the mutant under the same predicate. A checks-effects-interactions preservation lemma underwrites the first target and is consumed by the second's failure proof at the structural-adjacency boundary where the mutant deviates from production.
+
+*Layer 6-D — tridirectional capstone (1 target = 1).* The capstone meta-theorem states that if the Layer 6-A derivation, the Layer 6-B correctness theorem, and the Layer 6-C boundary pair all hold, then the methodology satisfies the discriminating-power predicate of §5.1 against the §2.4 production instantiations plus the §5.5 mutant. It is proven by direct conjunction of the three prior-layer theorems, with no modification of any underlying proof during composition.
+
+### §10.3.2 Per-theorem axiom records
+
+Every theorem is verified against an explicit `#print axioms` expectation. The CI re-checks each record on every push and fails the build on any drift.
+
+| Layer | Theorems | `#print axioms` record |
+|---|---|---|
+| 6-A | 1 target + 5 supporting | minimal `mathlib4` dependencies; no `propext`, no choice, no excluded middle |
+| 6-B | 1 target + 2 supporting | minimal `mathlib4` dependencies; pure intensional fragment (no `propext`) |
+| 6-C | 2 target + 1 supporting | minimal `mathlib4` dependencies; no classical axiom beyond the `mathlib4` baseline |
+| 6-D | 1 capstone | **`[propext]` only** — the union of the three prior-layer records |
+
+No theorem in the corpus is admitted with `sorry`, `admit`, or any user-introduced `axiom` declaration; the project introduces zero new axioms over the Lean 4 + `mathlib4` baseline. All axiom records are continuously verified at the `lake build QanaryContracts.PrintAxioms` target (903-job build) on every push, per §6.3.
+
+### §10.3.3 Reproduction commands
+
+The corpus is reproducible end-to-end from the tagged commit:
+
+```
+git clone <repository-url>
+cd qanary-contracts
+git checkout v1.3-layer6-closure
+lake build # 901 jobs green
+lake build QanaryContracts.PrintAxioms # 903 jobs green; verifies axiom records
+```
+
+The dependency graph is pinned and locked:
+
+- Lean compiler version pinned at `lean-toolchain` (`leanprover/lean4:v4.30.0-rc1`).
+- `mathlib4` dependency pinned at `lakefile.lean` (input revision `322515540d7f`) and locked to commit `322515540d7fd29ef8992b82c89044f86f02ac10` via `lake-manifest.json`.
+- The four parallel CI blocks at `build.yml` lines 287, 356, 408, and 464 re-run on every push and surface any drift in the dependency graph or the corpus.
+
+The methodology-framework canonical artifacts are sealed at the later tag `v1.4-methodology-housekeeping`; a reviewer evaluating the methodology framework rather than the proof substrate should check out that tag.
+
+## §10.4 Appendix: Methodology Framework Pointer
+
+### §10.4.1 Scope of this pointer
+
+Per the boundary discipline of §1, the methodology framework underpinning this work — the no-retrofit composition discipline of §4.2, the wrapper-layer absorption pattern of §4.3, and the multi-model audit workflow of §4.5 — is canonized as a separate body of work and presented in full in a companion methodology paper (separate arXiv submission). The brief operational presentations in §4 suffice for the substantive smart-contract-verification claims of the present paper. This appendix is deliberately thin: it provides a pointer table mapping the framework labels to their canonical artifact locations, for readers who encounter those labels in the public artifact record (for example, in the project's commit history). It does not present the framework's sub-pattern catalog, graduation criteria, or cross-protocol empirical history; those are the scope of the companion paper.
+
+### §10.4.2 Pointer table
+
+| Canonical artifact | Repository location | Description |
+|---|---|---|
+| Wrapper-layer absorption pattern (Tier 1) | `methodology/M-22.2_Tier1_canonical.md` | Wrapper module pattern preserving axiom-record minimality through composition |
+| Family-level meta-pattern | `methodology/authoring_layer_estimation_imprecision_canonical.md` | Authoring-layer estimation imprecision when measurement is determined externally |
+| Directive template (v2.1) | repository directive-template artifact | Standard directive structure for proof-authoring sessions |
+| Adjudication framework | (graduated into the v2.1 directive template) | Hard-stop catalog and graduation-queue adjudication for candidate sub-patterns |
+
+Full methodology-framework details — graduation history, sub-pattern catalog, four-outcome audit-findings triage framework, and the cross-protocol empirical history of the framework's application — appear in the forthcoming companion methodology paper. The canonical artifacts above are sealed at the repository tag `v1.4-methodology-housekeeping`.
+
+---
+
+*[Phase 6 manuscript-writing trajectory complete at Session 52. Phase 6 closes with tag `v1.5-phase6-closure` per Decision 21.]*
