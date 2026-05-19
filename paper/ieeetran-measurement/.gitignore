@@ -1,0 +1,11 @@
+# Measurement-only generated/scratch artifacts — regenerable from manuscript.
+# Committed scaffold: qanary_contracts_measurement.tex, _fix_longtable.pl, README.md
+*.pdf
+*.log
+*.aux
+*.out
+_abstract.md
+_body.md
+_abstract.tex
+_body.tex
+_body_fixed.tex
