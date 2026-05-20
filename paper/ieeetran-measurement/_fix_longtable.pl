@@ -25,7 +25,7 @@ while (my $l = <>) {
     }
     $l =~ s/\\noalign\{\}//g;
     next if $l =~ /^\s*\\end(head|firsthead|lastfoot|foot)\s*$/;
-    if ($l =~ /^\\end\{longtable\}/) { print "\\end{tabular}\n\\end{table}\n"; next; }
+    if ($l =~ /^\\end\{longtable\}/) { print "\\end{tabular}\n\\end{table*}\n"; next; }
     print $l;
 }
 sub emit_tabular {
@@ -34,5 +34,5 @@ sub emit_tabular {
     $s =~ s/\@\{\}\}\s*$//;                   # strip closing @{}}
     $s =~ s/^\s*\@\{\}//;                     # strip leading @{}
     $s =~ s/\s+/ /g;                          # flatten whitespace
-    return "\\begin{table}[!t]\\footnotesize\\centering\n\\begin{tabular}{\@{}$s\@{}}\n";
+    return "\\begin{table*}[!t]\\footnotesize\\centering\n\\begin{tabular}{\@{}$s\@{}}\n";
 }
