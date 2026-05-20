@@ -186,7 +186,7 @@ Continuous integration consists of four parallel verification blocks at `build.y
 
 ### §4.5 Manuscript audit and transparency
 
-The manuscript was developed with multi-model AI assistance under a recorded-artifact audit trail; the audit framework itself is not a claimed research contribution of this paper and is presented in the companion methodology paper (separate arXiv track per the boundary discipline of §1). This paragraph satisfies the generative-AI-usage disclosure required by the venue's call for papers.
+The manuscript was developed with generative-AI assistance (Claude, Grok, and Gemini) used for editorial purposes including adversarial audit of drafts, prose drafting under author direction, and methodology-framework review during preparation. All model outputs were inspected by the authors; the substantive contributions of this paper — the thirteen machine-checked theorems and their axiom records — are verified by the Lean 4 kernel and CI-reproducible per §10.3.3. The audit framework itself is not a claimed research contribution of this paper and is presented in the companion methodology paper (separate arXiv track per the boundary discipline of §1). This paragraph satisfies the generative-AI-usage disclosure required by the venue's call for papers.
 
 ---
 
