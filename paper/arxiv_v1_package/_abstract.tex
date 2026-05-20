@@ -1,0 +1,57 @@
+We present the first machine-checked correctness proof of the
+OpenZeppelin reentrancy-guard pattern against a Lean 4 state-machine
+model of production-deployed Solidity source with a composition
+meta-theorem spanning multiple production protocols. All thirteen
+theorems are machine-checked in Lean 4 with \textbf{zero \texttt{sorry},
+zero user-introduced axioms, and an axiom footprint bounded by
+\texttt{{[}propext{]}} across the entire corpus} --- propositional
+extensionality, a standard classical axiom in Lean 4's mathlib4;
+per-function inner lemmas are kernel-only, master/wrapper theorems carry
+\texttt{{[}propext{]}}-only records, and the Layer 6-D capstone composes
+exactly the union of the prior-layer records by direct conjunction. The
+corpus is gated under continuous integration across four parallel
+verification blocks that re-check each theorem and its axiom record on
+every push.
+
+Smart contract reentrancy has caused over US\$500M in cumulative
+documented losses since 2016, with the DAO 2016 attack alone draining
+≈3.6M ETH and forcing a contentious hard fork that split Ethereum into
+two persistent chains. The OpenZeppelin \texttt{ReentrancyGuard} mutex
+pattern has emerged as the de facto defense across most production DeFi
+protocols, yet no prior formal verification effort has established its
+\emph{discriminating power} --- the property that the guard pattern
+blocks attacks against vulnerable instances, preserves correct execution
+for non-attacking transactions, and distinguishes structurally-adjacent
+safe and vulnerable variants. Prior work has formalized either guard
+correctness on toy contracts or attack feasibility on isolated
+vulnerable instances, but not both directions plus boundary cases
+against production-deployed source.
+
+The verification covers three production protocol instantiations --- DAO
+2016, Compound v2 cToken family, and Aave V3 \texttt{flashLoan} ---
+together with one constructed minimal-diff mutant of Aave V3's
+production \texttt{flashLoan} (\texttt{flashLoanVulnerable}) authored to
+isolate a single security-critical structural difference for
+discriminating-power isolation. We apply mutation-testing methodology to
+formal verification by constructing this minimal-diff mutant, enabling a
+controlled experiment that naturally-occurring near-misses rarely
+provide. The resulting tridirectional structure pairs (a) a
+negative-instance attack reproduction of the DAO 2016 vulnerable
+pattern, (b) a positive-instance correctness proof against the Compound
+v2 cToken family, and (c) a boundary-case proof distinguishing Aave V3's
+safe-by-design \texttt{flashLoan} (CEI-correct) from the
+\texttt{flashLoanVulnerable} mutant. A single capstone meta-theorem
+composes the three protocol instantiations under a \emph{no-retrofit
+composition discipline} (each protocol-instantiation proof was sealed
+prior to capstone authoring, with no underlying-proof modifications
+during composition), establishing a machine-checked composition
+meta-theorem demonstrated at the first cross-protocol stress test
+(Compound v2 → Aave V3, within the lending-family domain; broader-family
+portability is future work, §9.4).
+
+We release the full Lean 4 source, CI gating configuration, and
+reproduction commands at
+\texttt{https://github.com/rayiskander2406/qanary-contracts} with
+reproducibility verified at tagged commit \texttt{v1.5-phase6-closure}
+(the Phase 6 closure seal; the substantive proof substrate is
+independently reproducible at \texttt{v1.3-layer6-closure} per §10.3.3).

@@ -1,0 +1,64 @@
+% arXiv v1 submission wrapper for QANARY Contracts paper.
+% Generated from paper/qanary_contracts_manuscript.md via pandoc, with the
+% longtable -> table+tabular transform applied (longtable is incompatible
+% with IEEEtran two-column).
+%
+% Compile: tectonic -X compile qanary_contracts_arxiv_v1.tex
+\documentclass[10pt,journal,compsoc]{IEEEtran}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{calc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{newunicodechar}
+\usepackage{url}
+\usepackage{fancyvrb}
+\usepackage{xcolor}
+\newenvironment{Shaded}{\par\footnotesize}{\par}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+\providecommand{\KeywordTok}[1]{\textbf{#1}}
+\providecommand{\NormalTok}[1]{#1}
+\providecommand{\OperatorTok}[1]{#1}
+\providecommand{\BuiltInTok}[1]{#1}
+\providecommand{\FunctionTok}[1]{#1}
+\providecommand{\OtherTok}[1]{#1}
+\providecommand{\VariableTok}[1]{#1}
+\providecommand{\ControlFlowTok}[1]{\textbf{#1}}
+\providecommand{\AttributeTok}[1]{#1}
+\providecommand{\DataTypeTok}[1]{#1}
+\providecommand{\ConstantTok}[1]{#1}
+\providecommand{\StringTok}[1]{#1}
+\providecommand{\CommentTok}[1]{\textit{#1}}
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\providecommand{\real}[1]{#1}
+\providecommand{\texorpdfstring}[2]{#1}
+\providecommand{\pandocbounded}[1]{#1}
+\newunicodechar{§}{\S}
+\newunicodechar{≈}{\ensuremath{\approx}}
+\newunicodechar{→}{\ensuremath{\rightarrow}}
+\newunicodechar{α}{\ensuremath{\alpha}}
+\newunicodechar{β}{\ensuremath{\beta}}
+\newunicodechar{γ}{\ensuremath{\gamma}}
+\newunicodechar{²}{\textsuperscript{2}}
+\newunicodechar{¹}{\textsuperscript{1}}
+\newunicodechar{é}{\'{e}}
+\newunicodechar{í}{\'{\i}}
+\newunicodechar{ș}{\c{s}}
+\newunicodechar{–}{--}
+\newunicodechar{—}{---}
+\newunicodechar{∧}{\ensuremath{\wedge}}
+\newunicodechar{⟨}{\ensuremath{\langle}}
+\newunicodechar{⟩}{\ensuremath{\rangle}}
+\title{Tridirectional Discriminating-Power Formal Verification of Smart
+Contract Reentrancy Defense Against Production-Deployed Solidity Source}
+\author{Ray~Iskander
+\IEEEcompsocitemizethanks{
+\IEEEcompsocthanksitem Verdict Security, Independent Formal Verification Firm.}}
+\begin{document}
+\maketitle
+\begin{abstract}
+\input{_abstract.tex}
+\end{abstract}
+\IEEEpeerreviewmaketitle
+\input{_body_fixed.tex}
+\end{document}
