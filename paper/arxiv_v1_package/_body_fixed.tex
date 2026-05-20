@@ -129,7 +129,7 @@ full proof corpus is continuously verified under a four-block CI
 configuration that re-checks each theorem and its axiom record on every
 push, ensuring claims hold against ongoing dependency drift; complete
 Lean 4 source plus \texttt{lake\ build} reproduction commands are
-provided in §10.3.
+provided in Appendix A.
 
 A single capstone meta-theorem at Layer 6-D composes the three protocol
 instantiations under a \textbf{no-retrofit composition discipline}: the
@@ -158,7 +158,8 @@ constraint. Both live instantiations (Compound v2, Aave V3) are
 lending-family, so the cross-protocol claim is scoped to within-lending
 portability plus the DAO 2016 exemplar; cross-domain extension is future
 work (§9.4). (Full methodology framework details, including the
-operational labels for the patterns this discipline embodies, in §10.4.)
+operational labels for the patterns this discipline embodies, in
+Appendix B.)
 
 \subsection{§1.4 Approach summary}\label{approach-summary}
 
@@ -177,7 +178,7 @@ exactly \texttt{{[}propext{]}}; absorption preserves the strongest
 available axiom-record claim at the capstone layer (§4.3).
 \emph{Continuous-integration axiom-record verification.} The thirteen
 theorems are gated by a four-block CI configuration that verifies axiom
-records on every push (§4.4; §10.3.3 reproduction commands); the
+records on every push (§4.4; Appendix A.3 reproduction commands); the
 repository is tagged at substantive substrate closure and methodology
 framework canonization, enabling reviewers to reproduce the entire
 corpus from a single tagged commit.
@@ -229,18 +230,17 @@ stress-tested under non-trivial protocol-semantics divergence --- and
 passed without retrofitting either underlying proof. We separate
 \emph{observed} (composition was not prevented at this boundary; N=1
 empirical), \emph{argued} (the sealed-before-capstone discipline
-forecloses the co-development explanation), and \emph{asserted} (broader
-portability, conjectured pending further cross-pair validation rather
-than asserted). Both live protocols are lending-family: the instance
-crosses a within-lending, not a between-domain, boundary (§9.4).
-(Internal methodology framework labels for this discipline are
-documented at §10.4.)
+forecloses the co-development explanation), and \emph{conjectured}
+(broader portability pending further cross-pair validation). Both live
+protocols are lending-family: the instance crosses a within-lending, not
+a between-domain, boundary (§9.4). (Internal methodology framework
+labels for this discipline are documented at Appendix B.)
 
 \emph{Build state and axiom record.} \texttt{lake\ build} is green at
 901 jobs; the axiom-record check (§4.4) is green across every theorem.
 Zero \texttt{sorry}. Zero introduced axioms. Axiom footprint bounded by
-\texttt{{[}propext{]}} across the entire corpus (§10.3.2 ground truth;
-§4.3 wrapper composition).
+\texttt{{[}propext{]}} across the entire corpus (Appendix A.2 ground
+truth; §4.3 wrapper composition).
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -564,11 +564,12 @@ model.
 Solidity source level. Deployed bytecode correctness derives from the
 Solidity compiler's correct compilation of that source (specifically,
 the \texttt{solc} version in each protocol's deployment metadata ---
-\texttt{0.4.x} for DAO 2016, \texttt{0.5.x} for Compound v2 cToken,
-\texttt{0.8.x} for Aave V3 Pool). Compiler-correctness verification is
-itself an active research area; we do not attempt to subsume that work
-within the present scope. Reviewers may treat our results as conditional
-on \texttt{solc} correctness for the specific source files analyzed.
+pre-\texttt{0.4.x} lineage for DAO 2016, \texttt{0.5.x} for Compound v2
+cToken, \texttt{0.8.x} for Aave V3 Pool). Compiler-correctness
+verification is itself an active research area; we do not attempt to
+subsume that work within the present scope. Reviewers may treat our
+results as conditional on \texttt{solc} correctness for the specific
+source files analyzed.
 
 \textbf{Lean-model fidelity for the modeled features.} Our proofs
 operate against the Lean 4 state-machine model of §3.2, not raw Solidity
@@ -756,7 +757,7 @@ sealed-before-capstone discipline that forecloses the co-development
 explanation, as an argument that the guard pattern's correctness is
 portable across the observed boundary; broader portability is
 conjectured pending further cross-pair validation (the
-observed/argued/asserted separation of §1.5), not asserted from N=1.
+observed/argued/conjectured separation of §1.5), not asserted from N=1.
 
 This is a methodologically stronger claim than ``composition succeeds
 when proofs are co-developed.'' The latter is consistent with each
@@ -766,8 +767,8 @@ explanation: the underlying proofs cannot have been shaped by the
 composition target, because they were sealed before the composition
 target's proof was authored. The internal label and broader pattern
 context for this discipline within our methodology framework appear at
-§10.4; the operational property described above is the load-bearing one
-for the present paper.
+Appendix B; the operational property described above is the load-bearing
+one for the present paper.
 
 \subsection{§4.3 Axiom-record-minimal wrapper
 composition}\label{axiom-record-minimal-wrapper-composition}
@@ -786,8 +787,8 @@ capstone therefore inherits the strongest available axiom-record claim
 propositional extensionality, a single classical extension fully
 compatible with the Lean 4 kernel. No user-introduced axioms appear at
 any layer of the corpus. The broader pattern context (related patterns,
-cross-protocol empirical history) is documented at §10.4 and elaborated
-in the companion methodology paper.
+cross-protocol empirical history) is documented at Appendix B and
+elaborated in the companion methodology paper.
 
 \subsection{§4.4 CI verification and axiom-record
 discipline}\label{ci-verification-and-axiom-record-discipline}
@@ -807,7 +808,7 @@ or \texttt{{[}propext{]}}-only. No theorem is admitted with
 \texttt{sorry}, \texttt{admit}, or any user-introduced \texttt{axiom}.
 Reproducibility is anchored at tagged commits: the substantive substrate
 at \texttt{v1.3-layer6-closure}, the methodology framework canonization
-at \texttt{v1.4-methodology-housekeeping}. Reviewers reproduce the
+at \texttt{v1.7-methodology-housekeeping}. Reviewers reproduce the
 verification by checking out either tag and running \texttt{lake\ build}
 plus \texttt{lake\ env\ lean\ QanaryContracts/PrintAxioms.lean} against
 the pinned dependency graph.
@@ -821,9 +822,9 @@ audit of drafts, prose drafting under author direction, and
 methodology-framework review during preparation. All model outputs were
 inspected by the authors; the substantive contributions of this paper
 --- the thirteen machine-checked theorems and their axiom records ---
-are verified by the Lean 4 kernel and CI-reproducible per §10.3.3. The
-audit framework itself is not a claimed research contribution of this
-paper and is presented in the companion methodology paper (separate
+are verified by the Lean 4 kernel and CI-reproducible per Appendix A.3.
+The audit framework itself is not a claimed research contribution of
+this paper and is presented in the companion methodology paper (separate
 arXiv track per the boundary discipline of §1). This paragraph satisfies
 the generative-AI-usage disclosure required by the venue's call for
 papers.
@@ -837,8 +838,7 @@ discriminating-power claim: the formal definitions and predicates, the
 inventory of the thirteen machine-checked theorems, per-layer
 presentation of negative/positive/boundary proofs, the capstone
 meta-theorem, and the reproducibility anchor. Full theorem statements,
-axiom records, and proof-skeleton excerpts are deferred to the §10.3
-appendix.
+axiom records, and proof-skeleton excerpts are deferred to Appendix A.
 
 \subsection{§5.1 Formal definitions and
 predicates}\label{formal-definitions-and-predicates}
@@ -871,7 +871,7 @@ structurally-adjacent vulnerable variants from safe counterparts. The
 tridirectional claim of §1.3 is the assertion that our formalization
 satisfies this meta-predicate against the three production
 instantiations of §2.4 plus the minimal-diff mutant of §5.5. Full
-predicate definitions appear in §10.3.
+predicate definitions appear in Appendix A.
 
 \subsection{§5.2 Theorem inventory}\label{theorem-inventory}
 
@@ -879,7 +879,7 @@ Thirteen theorems machine-check the discriminating-power claim. The
 inventory below summarizes each theorem at the level of an informal
 one-line statement; the precise Lean 4 statements (with full type
 signatures, hypothesis lists, and the \texttt{\#print\ axioms} output)
-appear in §10.3.
+appear in Appendix A.
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{table*}[!t]\footnotesize\centering
@@ -922,10 +922,10 @@ of prior-layer records) \\
 Each layer's theorems are gated by an independent CI block (§4.4),
 mechanically verifying both that the theorems still type-check against
 the pinned \texttt{mathlib4} dependency graph and that their axiom
-records match the expectations recorded in §10.3 on every push. No
+records match the expectations recorded in Appendix A on every push. No
 theorem is admitted with \texttt{sorry}, \texttt{admit}, or any
 user-introduced \texttt{axiom} declaration; the corpus axiom footprint
-is bounded by \texttt{{[}propext{]}} (§10.3.2).
+is bounded by \texttt{{[}propext{]}} (Appendix A.2).
 
 \subsection{§5.3 Layer 6-A: negative instance (DAO
 2016)}\label{layer-6-a-negative-instance-dao-2016}
@@ -958,7 +958,7 @@ pattern was created to address, even where the guard itself is absent.
 This complements the Layer 6-B and 6-C results, which establish
 recognition of the guard's \emph{behavior} when present. Full theorem
 statements, hypothesis structure, and proof-skeleton outline appear in
-§10.3.
+Appendix A.
 
 \subsection{§5.4 Layer 6-B: positive instance (Compound v2 cToken
 family)}\label{layer-6-b-positive-instance-compound-v2-ctoken-family}
@@ -1004,7 +1004,7 @@ axiom-record minimality through the composition. The capstone records
 minimal axiom dependence (no propositional extensionality required at
 this layer; the result is provable in the pure intensional fragment of
 Lean 4's type theory). Full theorem statements, the wrapper module's
-structure, and the per-lemma proof skeletons appear in §10.3.
+structure, and the per-lemma proof skeletons appear in Appendix A.
 
 \subsection{\texorpdfstring{§5.5 Layer 6-C: boundary case (Aave V3
 \texttt{flashLoan} vs
@@ -1050,7 +1050,7 @@ mutant deviates. The methodology thereby distinguishes safe
 \texttt{flashLoan} from structurally-adjacent vulnerable
 \texttt{flashLoanVulnerable} at the precise boundary the boundary case
 is designed to probe. Full theorem statements and the mutant's diff
-specification appear in §10.3.
+specification appear in Appendix A.
 
 \subsection{§5.6 Layer 6-D: tridirectional
 capstone}\label{layer-6-d-tridirectional-capstone}
@@ -1104,13 +1104,13 @@ The proof term is exactly the triple
 \texttt{⟨h\_dao,\ h\_compound,\ h\_aave⟩} of the three sealed
 prior-layer theorems --- no rewriting, no hypothesis adjustment, no
 auxiliary lemma. Full prior-layer theorem statements and
-\texttt{\#print\ axioms} output appear in §10.3.
+\texttt{\#print\ axioms} output appear in Appendix A.
 
 \subsection{§5.7 Reproducibility}\label{reproducibility}
 
 The corpus is reproducible end-to-end from a tagged commit per §4.4;
 full \texttt{git\ checkout} invocations, \texttt{lake\ build} commands,
-and expected axiom-record outputs appear in §10.3.3.
+and expected axiom-record outputs appear in Appendix A.3.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -1133,8 +1133,8 @@ The repository is organized at three top-level locations:
 \texttt{paper/} (manuscript and architectural artifacts),
 \texttt{QanaryContracts/} (Lean 4 source organized by Layer 6-A/B/C/D
 with supporting modules), and \texttt{methodology/} (canonical artifacts
-pointer-tabled at §10.4). The continuous-integration configuration sits
-at \texttt{build.yml}. All artifacts are reachable from any tagged
+pointer-tabled at Appendix B). The continuous-integration configuration
+sits at \texttt{build.yml}. All artifacts are reachable from any tagged
 commit, so a reviewer who checks out a single tag obtains consistent
 state across manuscript, source, and CI configuration.
 
@@ -1148,9 +1148,9 @@ across \textasciitilde517 lines (3 theorems); Layer 6-C Aave V3 across
 \textasciitilde770 lines (3 theorems including the minimal-diff mutant);
 Layer 6-D the capstone in \textasciitilde260 lines (1 theorem);
 supporting modules and lemmas total \textasciitilde6,335 lines. Per-file
-contribution and full theorem-to-file mapping appear in §10.3
+contribution and full theorem-to-file mapping appear in Appendix A
 (approximate per-layer counts; exact per-file counts reproducible at the
-tagged commit per §10.3.3).
+tagged commit per Appendix A.3).
 
 \subsection{§6.3 CI verification}\label{ci-verification}
 
@@ -1162,7 +1162,7 @@ expectation. Wall-clock verification runs in the order of minutes per
 push on standard runners. CI failure on any block --- type-check
 failure, axiom-record drift, or supporting-lemma regression --- surfaces
 immediately in the pull-request status. Full per-theorem axiom records
-appear in §10.3.
+appear in Appendix A.
 
 \subsection{§6.4 Reproducibility posture}\label{reproducibility-posture}
 
@@ -1171,8 +1171,8 @@ artifact; the directive + closure-report discipline is documented in the
 companion methodology paper. The corpus is reproducible end-to-end from
 a tagged commit: the substantive substrate is sealed at
 \texttt{v1.3-layer6-closure}; the methodology framework canonization is
-sealed at \texttt{v1.4-methodology-housekeeping}. Full reproduction
-commands and the pinned dependency graph appear in §10.3.
+sealed at \texttt{v1.7-methodology-housekeeping}. Full reproduction
+commands and the pinned dependency graph appear in Appendix A.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
@@ -1284,8 +1284,8 @@ work.
 Property-based testing tools --- Foundry fuzz testing and Echidna ---
 have driven substantial bug discovery at deployment scale. Their
 strength is finding counterexamples; they do not establish foundational
-correctness. See appendix §10.5 for at-a-glance positioning against
-Certora, Move Prover, VeriSol, and KEVM.
+correctness. See Appendix C for at-a-glance positioning against Certora,
+Move Prover, VeriSol, and KEVM.
 
 Prior formal verification of smart contracts has demonstrated
 theorem-prover-based formalization of platform semantics or isolated
@@ -1301,21 +1301,21 @@ Reentrancy has received targeted attention across runtime, static, and
 disclosure-driven layers. Sereum {[}5{]} introduced runtime monitoring
 for reentrancy patterns at the EVM execution layer --- deployable but
 not preventive at the source level, not aimed at foundational
-correctness. Static analyzers including SmartScopy {[}6{]}, DEFTECTOR,
-and ReGuard apply pattern-recognition discipline targeted at the
-reentrancy class; precision is empirically strong for classical
-reentrancy and weakens at structural-adjacency boundaries (per §1.2) and
-at cross-function and read-only variants. Mutation testing {[}9{]},
-{[}10{]} introduces small syntactic faults to assess sensitivity to
-structurally-adjacent regressions; the Layer 6-C boundary case (§5.5)
-applies this methodology to machine-checked proofs of production smart
-contracts --- to our knowledge a first --- using a single
-hand-constructed minimal-diff mutant rather than an operator-derived
-corpus (defended at §5.5 and §9.2). Read-only reentrancy emerged as a
-recognized attack class following the Curve Finance gauges 2022
-disclosure (callback reentrancy on view functions returning stale
-state); it is acknowledged here as future-work scope (§7.2).
-Foundational machine-checked discriminating-power against the
+correctness. Static analyzers including SmartScopy {[}6{]} and similar
+pattern-recognition tools targeted at the reentrancy class apply
+pattern-recognition discipline; precision is empirically strong for
+classical reentrancy and weakens at structural-adjacency boundaries (per
+§1.2) and at cross-function and read-only variants. Mutation testing
+{[}9{]}, {[}10{]} introduces small syntactic faults to assess
+sensitivity to structurally-adjacent regressions; the Layer 6-C boundary
+case (§5.5) applies this methodology to machine-checked proofs of
+production smart contracts --- to our knowledge a first --- using a
+single hand-constructed minimal-diff mutant rather than an
+operator-derived corpus (defended at §5.5 and §9.2). Read-only
+reentrancy emerged as a recognized attack class following the Curve
+Finance gauges 2022 disclosure (callback reentrancy on view functions
+returning stale state); it is acknowledged here as future-work scope
+(§7.2). Foundational machine-checked discriminating-power against the
 OpenZeppelin guard pattern at production protocol scale has not been
 previously demonstrated.
 
@@ -1447,7 +1447,7 @@ proofs toward a composition target --- the first such cross-protocol
 composition demonstrated under this discipline (§7, §8). The
 verification's audit trail is inspectable end-to-end; the methodology
 framework that generalizes this posture is the subject of the companion
-paper, with the §10.4 pointer summarizing its canonical artifacts.
+paper, with the Appendix B pointer summarizing its canonical artifacts.
 Future work (§7.2, §9) extends the discriminating-power framework to
 additional attack classes and defense patterns, EVM-bytecode-level
 formalization, cross-language application, and continuous
@@ -1455,8 +1455,8 @@ protocol-upgrade verification.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\section{§10.3 Appendix: Theorem Statements, Axiom Records, and
-Reproduction}\label{appendix-theorem-statements-axiom-records-and-reproduction}
+\section{Appendix A: Theorem Statements, Axiom Records, and
+Reproduction}\label{appendix-a-theorem-statements-axiom-records-and-reproduction}
 
 This appendix is the substantive substrate anchor for the
 discriminating-power claim. It absorbs the full-statement and
@@ -1467,7 +1467,8 @@ repository at the tagged commit \texttt{v1.3-layer6-closure}; the
 paraphrases below state what each theorem establishes at the level a
 reviewer needs before consulting the source.
 
-\subsection{§10.3.1 Theorem statements}\label{theorem-statements}
+\subsection{Appendix A.1 Theorem
+statements}\label{appendix-a.1-theorem-statements}
 
 The corpus comprises thirteen theorems across four layers, matching the
 §5.2 inventory exactly.
@@ -1511,8 +1512,8 @@ against the §2.4 production instantiations plus the §5.5 mutant. It is
 proven by direct conjunction of the three prior-layer theorems, with no
 modification of any underlying proof during composition.
 
-\subsection{§10.3.2 Per-theorem axiom
-records}\label{per-theorem-axiom-records}
+\subsection{Appendix A.2 Per-theorem axiom
+records}\label{appendix-a.2-per-theorem-axiom-records}
 
 Every theorem is verified against an explicit \texttt{\#print\ axioms}
 expectation, re-checked on every push and gated to fail the build on any
@@ -1526,9 +1527,10 @@ introduces no new axiom; the project introduces zero new axioms over the
 Lean 4 + \texttt{mathlib4} baseline. No theorem in the corpus is
 admitted with \texttt{sorry}, \texttt{admit}, or any user-introduced
 \texttt{axiom} declaration. Exact per-theorem records are CI-gated
-(§6.3) and reproducible per §10.3.3.
+(§6.3) and reproducible per Appendix A.3.
 
-\subsection{§10.3.3 Reproduction commands}\label{reproduction-commands}
+\subsection{Appendix A.3 Reproduction
+commands}\label{appendix-a.3-reproduction-commands}
 
 The corpus is reproducible end-to-end from the tagged commit:
 
@@ -1559,14 +1561,15 @@ The dependency graph is pinned and locked:
 \end{itemize}
 
 The methodology-framework canonical artifacts are sealed at the later
-tag \texttt{v1.4-methodology-housekeeping}; a reviewer evaluating the
+tag \texttt{v1.7-methodology-housekeeping}; a reviewer evaluating the
 methodology framework rather than the proof substrate should check out
 that tag.
 
-\section{§10.4 Appendix: Methodology Framework
-Pointer}\label{appendix-methodology-framework-pointer}
+\section{Appendix B: Methodology Framework
+Pointer}\label{appendix-b-methodology-framework-pointer}
 
-\subsection{§10.4.1 Scope of this pointer}\label{scope-of-this-pointer}
+\subsection{Appendix B.1 Scope of this
+pointer}\label{appendix-b.1-scope-of-this-pointer}
 
 Per the boundary discipline of §1, the methodology framework
 underpinning this work --- the no-retrofit composition discipline of
@@ -1589,7 +1592,8 @@ discipline's operational consequence (§4.2) are stated and verifiable
 here. The companion framework adds generalization beyond the present
 scope and is not load-bearing for this paper's substantive claims.
 
-\subsection{§10.4.2 Canonical artifacts}\label{canonical-artifacts}
+\subsection{Appendix B.2 Canonical
+artifacts}\label{appendix-b.2-canonical-artifacts}
 
 The methodology framework's canonical artifacts --- the wrapper-layer
 absorption pattern (axiom-record-minimal composition; §4.3), the
@@ -1601,8 +1605,8 @@ history, sub-pattern catalog, four-outcome audit-findings triage
 framework, and the cross-protocol empirical history of the framework's
 application appear there.
 
-\subsection{§10.5 Comparison against industrial FV
-frameworks}\label{comparison-against-industrial-fv-frameworks}
+\section{Appendix C: Comparison against industrial FV
+frameworks}\label{appendix-c-comparison-against-industrial-fv-frameworks}
 
 For reviewer at-a-glance positioning, the following table compares the
 present work against the principal industrial / academic formal
