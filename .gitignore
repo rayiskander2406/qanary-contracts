@@ -2,3 +2,6 @@
 build/
 *.olean
 .DS_Store
+
+# Claude working memory (flywheel) — local only, not for public release
+.claude/
