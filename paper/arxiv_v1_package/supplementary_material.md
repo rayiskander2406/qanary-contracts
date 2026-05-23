@@ -42,8 +42,8 @@ post-Phase-7-graduated state) per §10.4.
 
 ## §2 CI verification status
 
-- **Build status:** `lake build` green at 901 jobs (verified at HEAD
-  (internal commit), post-Session-61 Unit 1 commit; the underlying Lean source has
+- **Build status:** `lake build` green at 901 jobs (verified at HEAD,
+  post-Session-61 Unit 1 state; the underlying Lean source has
   not changed since `v1.3-layer6-closure` per the M-26.1 compose-from-outside
   discipline of §4.2).
 - **CI configuration:** four parallel verification blocks at `build.yml`
@@ -66,31 +66,15 @@ The repository is organized at three top-level locations:
 
 The continuous-integration configuration sits at `build.yml`.
 
-## §4 Audit and decision artifacts (companion methodology paper material)
+## §4 Audit framework artifacts
 
-The audit framework that produced the manuscript is not a claimed
-contribution of this paper and is presented in the companion methodology
-paper. For reviewers who wish to inspect the audit trail referenced at §4.5
-GenAI disclosure:
+The audit framework that produced the manuscript is presented in full in the
+companion methodology paper, and is not a claimed contribution of this paper.
+The internal artifacts produced during the audit process are not included in
+this public artifact repository.
 
-- internal Phase-7 audit documents — per-sub-phase
-  Claude-session-context audit findings.
-- internal Phase-7 audit documents — three-voice raw audit
-  outputs (Claude-fresh, Grok, Gemini) per sub-phase.
-- internal Phase-7 audit documents — four-way
-  consolidation per sub-phase.
-- internal Phase-7 audit documents — Decision 25
-  four-outcome triage adjudication per sub-phase.
-- internal Phase-7 audit documents — sub-phase closure
-  reports.
-- the internal post-Phase-7 housekeeping closure report — post-Phase-7
-  methodology framework graduation cycle closure.
-- `methodology/*.md` — canonical methodology framework artifacts
-  (8 artifacts: 2 pre-Phase-7 + 6 post-Phase-7-housekeeping; plus
-  `post_phase_7_integration_notes.md`).
-
-These are reachable from the tagged commits enumerated in §1 of this
-document.
+The canonical methodology framework artifacts the manuscript cites directly at
+§10.4 are included here, at `methodology/*.md`.
 
 ## §5 Operational note for Session 62 submission execution
 
