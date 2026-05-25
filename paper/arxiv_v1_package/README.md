@@ -11,7 +11,7 @@ this package.
 | `qanary_contracts_arxiv_v1.tex` | LaTeX wrapper (IEEEtran-compsoc `[10pt,journal,compsoc]`); the primary submission file. |
 | `_abstract.md` / `_abstract.tex` | Abstract source (markdown extracted from manuscript) + pandoc-emitted LaTeX. |
 | `_body.md` / `_body.tex` / `_body_fixed.tex` | Body source (markdown extracted) + pandoc-emitted LaTeX + longtable-transformed LaTeX. |
-| `_fix_longtable.pl` | Transform script that converts pandoc-emitted `longtable` environments to `table*` + `tabular` (longtable is incompatible with IEEEtran two-column). |
+| `_fix_longtable.pl` | Transform script that converts pandoc-emitted `longtable` environments to `table*` + `tabular` (longtable is incompatible with IEEEtran two-column). Also hoists any `\caption{}` above the `tabular` and drops the duplicated header pandoc emits for captioned tables. |
 | `qanary_contracts_arxiv_v1.pdf` | Compiled PDF (16 pages total; body ~12.85pp + appendix ~3pp + references ~1pp). |
 | `qanary_contracts_arxiv_v1.log` | Tectonic compile log (retained for diagnostics). |
 | `supplementary_material.md` | Lean source repository pointer + reproducibility tags + CI status + reviewer reproduction path. |
