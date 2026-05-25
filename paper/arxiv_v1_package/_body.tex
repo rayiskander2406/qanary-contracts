@@ -1,4 +1,4 @@
-\section{§1 Introduction}\label{introduction}
+\section{Introduction}\label{introduction}
 
 Smart contract reentrancy has been a foundational vulnerability class on
 Ethereum-style chains since the DAO 2016 attack, yet the gap between
@@ -12,7 +12,7 @@ and composed under a \emph{no-retrofit composition discipline} that
 establishes guard-pattern correctness as a portable cross-protocol claim
 against multiple production protocols.
 
-\subsection{§1.1 Problem statement}\label{problem-statement}
+\subsection{Problem statement}\label{problem-statement}
 
 Smart contract reentrancy is one of the oldest and most consequential
 vulnerability classes on Ethereum-style chains. The DAO 2016 attack
@@ -39,7 +39,7 @@ defended-incorrectly from undefended cases, machine-checked in all three
 directions, against production source. This paper supplies that
 combination.
 
-\subsection{§1.2 Limitations of prior
+\subsection{Limitations of prior
 approaches}\label{limitations-of-prior-approaches}
 
 We characterize four limitations of the prior verification landscape
@@ -87,7 +87,7 @@ with a guard-pattern proof for Protocol B without modification of
 either. Absent such a composition theorem, per-protocol claims sit as
 disconnected lemmas rather than a coherent discipline claim.
 
-\subsection{§1.3 Contribution claim
+\subsection{Contribution claim
 summary}\label{contribution-claim-summary}
 
 We present \textbf{the first machine-checked correctness proof of the
@@ -161,7 +161,7 @@ work (§9.4). (Full methodology framework details, including the
 operational labels for the patterns this discipline embodies, in
 Appendix B.)
 
-\subsection{§1.4 Approach summary}\label{approach-summary}
+\subsection{Approach summary}\label{approach-summary}
 
 The methodology rests on four load-bearing choices. \emph{Lean 4 with
 mathlib4.} All thirteen theorems are stated and machine-checked in Lean
@@ -183,7 +183,7 @@ repository is tagged at substantive substrate closure and methodology
 framework canonization, enabling reviewers to reproduce the entire
 corpus from a single tagged commit.
 
-\subsection{§1.5 Results summary}\label{results-summary}
+\subsection{Results summary}\label{results-summary}
 
 \emph{Thirteen theorems machine-checked.} Six Layer 6-A theorems
 formalize the negative-instance DAO 2016 attack reproduction; three
@@ -244,7 +244,7 @@ truth; §4.3 wrapper composition).
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\section{§2 Background}\label{background}
+\section{Background}\label{background}
 
 This section establishes the context that subsequent sections build on:
 the smart contract security setting in which reentrancy vulnerabilities
@@ -253,7 +253,7 @@ defensive role, the production contracts in scope for the tridirectional
 discriminating-power claim, and the Lean 4 + formal verification
 foundations on which the machine-checked proofs rest.
 
-\subsection{§2.1 Smart contract security
+\subsection{Smart contract security
 context}\label{smart-contract-security-context}
 
 Smart contract platforms execute programmable on-chain logic under a
@@ -279,7 +279,7 @@ interleave state mutation across mutually-distrusting authors --- a
 single missed defensive boundary can drain a multi-billion-dollar
 contract in one transaction.
 
-\subsection{§2.2 The reentrancy attack
+\subsection{The reentrancy attack
 class}\label{the-reentrancy-attack-class}
 
 Reentrancy refers to a family of vulnerabilities in which a smart
@@ -345,7 +345,7 @@ weaker; these patterns require reasoning across function boundaries and
 across views vs mutators, which static analysis tools have historically
 struggled with at production-source scale.
 
-\subsection{§2.3 OpenZeppelin guard
+\subsection{OpenZeppelin guard
 pattern}\label{openzeppelin-guard-pattern}
 
 The OpenZeppelin \texttt{ReentrancyGuard} contract is a
@@ -372,7 +372,7 @@ Uniswap-style AMMs, and the bulk of TVL-significant DeFi protocols use
 \texttt{ReentrancyGuard} or a near-identical variant), so the pattern's
 correctness is load-bearing at ecosystem scale.
 
-\subsection{§2.4 Real-contract instances in
+\subsection{Real-contract instances in
 scope}\label{real-contract-instances-in-scope}
 
 The tridirectional discriminating-power claim is established against
@@ -445,7 +445,7 @@ structural-adjacency boundary --- the place where pattern recognition
 tends to degrade and where a verification methodology's discriminating
 power is most consequential.
 
-\subsection{§2.5 Lean 4 and formal verification
+\subsection{Lean 4 and formal verification
 context}\label{lean-4-and-formal-verification-context}
 
 Lean 4 is a dependently-typed proof assistant with type-theoretic
@@ -474,7 +474,7 @@ choice or excluded middle). No theorem is admitted with \texttt{sorry},
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\section{§3 Threat Model}\label{threat-model}
+\section{Threat Model}\label{threat-model}
 
 This section specifies the formal threat boundary against which the
 discriminating-power claim of §1.3 is established. We make adversary
@@ -485,7 +485,7 @@ reviewers to evaluate the contribution claim's scope precisely and
 serves as the canonical reference point for the substantive material in
 §5 about what is and is not proved.
 
-\subsection{§3.1 Adversary model}\label{adversary-model}
+\subsection{Adversary model}\label{adversary-model}
 
 The adversary controls one or more Externally-Owned Accounts (EOAs) on
 the target chain and may deploy and call arbitrary smart contracts. The
@@ -520,7 +520,7 @@ by standard EVM gas-limit constraints (per-transaction block gas limit
 and per-call sub-budgets); no quantum-computational, oracle-prediction,
 or non-classical computational assumptions are made on either side.
 
-\subsection{§3.2 State-machine abstraction
+\subsection{State-machine abstraction
 level}\label{state-machine-abstraction-level}
 
 The formalization operates at Solidity-level semantics rather than raw
@@ -551,7 +551,7 @@ and coarse gas accounting --- each benign for the reentrancy class. The
 faithfulness of this model to Solidity semantics for the modeled
 features is an explicit trust assumption (§3.3).
 
-\subsection{§3.3 Trust assumptions}\label{trust-assumptions}
+\subsection{Trust assumptions}\label{trust-assumptions}
 
 Five trust assumptions underpin the discriminating-power claim, all
 standard in the formal-verification literature for smart-contract
@@ -620,7 +620,7 @@ class is mediated by smart-contract execution within a single
 transaction, not by consensus-layer behavior; our claim therefore
 inherits no consensus-layer trust requirement.
 
-\subsection{§3.4 Out-of-scope items and boundary
+\subsection{Out-of-scope items and boundary
 summary}\label{out-of-scope-items-and-boundary-summary}
 
 The discriminating-power claim addresses the reentrancy attack class
@@ -653,7 +653,7 @@ end-to-end.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\section{§4 Methodology Overview}\label{methodology-overview}
+\section{Methodology Overview}\label{methodology-overview}
 
 This section describes the formalization approach and the methodological
 discipline under which the proofs were authored, presented at the level
@@ -664,7 +664,7 @@ subject of a companion arXiv paper; the present section gives reviewers
 what they need to evaluate the substantive smart-contract-verification
 claims of this paper.
 
-\subsection{§4.1 Formalization approach}\label{formalization-approach}
+\subsection{Formalization approach}\label{formalization-approach}
 
 The formalization is conducted in Lean 4 with mathlib4 as the supporting
 mathematical library. Lean 4's dependent type theory, with the
@@ -708,7 +708,7 @@ silently introduces a dependency on (say) classical choice would be
 caught by the CI gate at the next push, not by reviewer inspection at
 submission time.
 
-\subsection{§4.2 The compose-from-outside
+\subsection{The compose-from-outside
 discipline}\label{the-compose-from-outside-discipline}
 
 The capstone meta-theorem at Layer 6-D is proven under a strict
@@ -770,7 +770,7 @@ context for this discipline within our methodology framework appear at
 Appendix B; the operational property described above is the load-bearing
 one for the present paper.
 
-\subsection{§4.3 Axiom-record-minimal wrapper
+\subsection{Axiom-record-minimal wrapper
 composition}\label{axiom-record-minimal-wrapper-composition}
 
 The Layer 6-D capstone is structured as a thin wrapper module that
@@ -790,7 +790,7 @@ any layer of the corpus. The broader pattern context (related patterns,
 cross-protocol empirical history) is documented at Appendix B and
 elaborated in the companion methodology paper.
 
-\subsection{§4.4 CI verification and axiom-record
+\subsection{CI verification and axiom-record
 discipline}\label{ci-verification-and-axiom-record-discipline}
 
 Continuous integration consists of four parallel verification blocks at
@@ -813,7 +813,7 @@ verification by checking out either tag and running \texttt{lake\ build}
 plus \texttt{lake\ env\ lean\ QanaryContracts/PrintAxioms.lean} against
 the pinned dependency graph.
 
-\subsection{§4.5 Manuscript audit and
+\subsection{Manuscript audit and
 transparency}\label{manuscript-audit-and-transparency}
 
 The manuscript was developed with generative-AI assistance (Claude,
@@ -831,7 +831,7 @@ papers.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\section{§5 Formalization}\label{formalization}
+\section{Formalization}\label{formalization}
 
 This section presents the substantive substrate of the
 discriminating-power claim: the formal definitions and predicates, the
@@ -840,7 +840,7 @@ presentation of negative/positive/boundary proofs, the capstone
 meta-theorem, and the reproducibility anchor. Full theorem statements,
 axiom records, and proof-skeleton excerpts are deferred to Appendix A.
 
-\subsection{§5.1 Formal definitions and
+\subsection{Formal definitions and
 predicates}\label{formal-definitions-and-predicates}
 
 The formalization rests on three load-bearing predicates over the
@@ -873,7 +873,7 @@ satisfies this meta-predicate against the three production
 instantiations of §2.4 plus the minimal-diff mutant of §5.5. Full
 predicate definitions appear in Appendix A.
 
-\subsection{§5.2 Theorem inventory}\label{theorem-inventory}
+\subsection{Theorem inventory}\label{theorem-inventory}
 
 Thirteen theorems machine-check the discriminating-power claim. The
 inventory below summarizes each theorem at the level of an informal
@@ -881,13 +881,28 @@ one-line statement; the precise Lean 4 statements (with full type
 signatures, hypothesis lists, and the \texttt{\#print\ axioms} output)
 appear in Appendix A.
 
-{\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}
   >{\raggedleft\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}
   >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}
   >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}
   >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}@{}}
+\caption{Inventory of thirteen theorems across four
+protocol-instantiation layers.}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Layer
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Count
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Theorem(s)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Informal statement
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Axiom record
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Layer
@@ -922,7 +937,6 @@ methodology catches the negative instance, clears the positive instance,
 and distinguishes the boundary pair & \texttt{{[}propext{]}}-only (union
 of prior-layer records) \\
 \end{longtable}
-}
 
 Each layer's theorems are gated by an independent CI block (§4.4),
 mechanically verifying both that the theorems still type-check against
@@ -932,7 +946,7 @@ theorem is admitted with \texttt{sorry}, \texttt{admit}, or any
 user-introduced \texttt{axiom} declaration; the corpus axiom footprint
 is bounded by \texttt{{[}propext{]}} (Appendix A.2).
 
-\subsection{§5.3 Layer 6-A: negative instance (DAO
+\subsection{Layer 6-A: negative instance (DAO
 2016)}\label{layer-6-a-negative-instance-dao-2016}
 
 The Layer 6-A negative instance reproduces the classical reentrancy
@@ -965,7 +979,7 @@ recognition of the guard's \emph{behavior} when present. Full theorem
 statements, hypothesis structure, and proof-skeleton outline appear in
 Appendix A.
 
-\subsection{§5.4 Layer 6-B: positive instance (Compound v2 cToken
+\subsection{Layer 6-B: positive instance (Compound v2 cToken
 family)}\label{layer-6-b-positive-instance-compound-v2-ctoken-family}
 
 Compound v2's cToken family represents the largest and longest-running
@@ -1011,9 +1025,9 @@ this layer; the result is provable in the pure intensional fragment of
 Lean 4's type theory). Full theorem statements, the wrapper module's
 structure, and the per-lemma proof skeletons appear in Appendix A.
 
-\subsection{\texorpdfstring{§5.5 Layer 6-C: boundary case (Aave V3
+\subsection{\texorpdfstring{Layer 6-C: boundary case (Aave V3
 \texttt{flashLoan} vs
-\texttt{flashLoanVulnerable})}{§5.5 Layer 6-C: boundary case (Aave V3 flashLoan vs flashLoanVulnerable)}}\label{layer-6-c-boundary-case-aave-v3-flashloan-vs-flashloanvulnerable}
+\texttt{flashLoanVulnerable})}{Layer 6-C: boundary case (Aave V3 flashLoan vs flashLoanVulnerable)}}\label{layer-6-c-boundary-case-aave-v3-flashloan-vs-flashloanvulnerable}
 
 The Layer 6-C boundary case is the methodological core of the
 discriminating-power claim. Aave V3's Pool contract implements
@@ -1057,7 +1071,7 @@ mutant deviates. The methodology thereby distinguishes safe
 is designed to probe. Full theorem statements and the mutant's diff
 specification appear in Appendix A.
 
-\subsection{§5.6 Layer 6-D: tridirectional
+\subsection{Layer 6-D: tridirectional
 capstone}\label{layer-6-d-tridirectional-capstone}
 
 The Layer 6-D capstone meta-theorem composes the three
@@ -1111,7 +1125,7 @@ prior-layer theorems --- no rewriting, no hypothesis adjustment, no
 auxiliary lemma. Full prior-layer theorem statements and
 \texttt{\#print\ axioms} output appear in Appendix A.
 
-\subsection{§5.7 Reproducibility}\label{reproducibility}
+\subsection{Reproducibility}\label{reproducibility}
 
 The corpus is reproducible end-to-end from a tagged commit per §4.4;
 full \texttt{git\ checkout} invocations, \texttt{lake\ build} commands,
@@ -1119,7 +1133,7 @@ and expected axiom-record outputs appear in Appendix A.3.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\section{§6 Implementation and
+\section{Implementation and
 Reproducibility}\label{implementation-and-reproducibility}
 
 This section presents the practitioner-facing evidence base for the
@@ -1132,18 +1146,22 @@ foundational machine-checked verification establishes a different
 guarantee layer than heuristic detection, so the comparison is
 qualitative by construction (per §1.2).
 
-\subsection{§6.1 Repository structure}\label{repository-structure}
+\subsection{Repository structure}\label{repository-structure}
 
 The repository is organized at three top-level locations:
-\texttt{paper/} (manuscript and architectural artifacts),
-\texttt{QanaryContracts/} (Lean 4 source organized by Layer 6-A/B/C/D
-with supporting modules), and \texttt{methodology/} (canonical artifacts
+\texttt{paper/} (manuscript source, arXiv submission package, and
+supporting artifacts), \texttt{QanaryContracts/} (Lean 4 source mapping
+to Layer 6-A/B/C/D --- \texttt{DAOContract.lean} (Layer 6-A negative
+instance), \texttt{CompoundContract.lean} (Layer 6-B positive instance),
+\texttt{AaveBoundaryCase.lean} (Layer 6-C boundary case),
+\texttt{CrossProtocolAudit.lean} (Layer 6-D capstone) --- plus
+supporting modules), and \texttt{methodology/} (canonical artifacts
 pointer-tabled at Appendix B). The continuous-integration configuration
 sits at \texttt{build.yml}. All artifacts are reachable from any tagged
 commit, so a reviewer who checks out a single tag obtains consistent
 state across manuscript, source, and CI configuration.
 
-\subsection{§6.2 Corpus size}\label{corpus-size}
+\subsection{Corpus size}\label{corpus-size}
 
 The formalization corpus is approximately 8,538 lines of Lean 4 source
 across the four protocol-instantiation layers and supporting
@@ -1157,7 +1175,7 @@ contribution and full theorem-to-file mapping appear in Appendix A
 (approximate per-layer counts; exact per-file counts reproducible at the
 tagged commit per Appendix A.3).
 
-\subsection{§6.3 CI verification}\label{ci-verification}
+\subsection{CI verification}\label{ci-verification}
 
 The CI configuration of §4.4 --- four parallel verification blocks, one
 per Layer 6-A/B/C/D --- runs on every push. \texttt{lake\ build}
@@ -1169,7 +1187,7 @@ failure, axiom-record drift, or supporting-lemma regression --- surfaces
 immediately in the pull-request status. Full per-theorem axiom records
 appear in Appendix A.
 
-\subsection{§6.4 Reproducibility posture}\label{reproducibility-posture}
+\subsection{Reproducibility posture}\label{reproducibility-posture}
 
 Every proof-authoring session is recorded as a tagged-commit-anchored
 artifact; the directive + closure-report discipline is documented in the
@@ -1181,9 +1199,9 @@ commands and the pinned dependency graph appear in Appendix A.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\section{§7 Discussion}\label{discussion}
+\section{Discussion}\label{discussion}
 
-\subsection{§7.1 Implications}\label{implications}
+\subsection{Implications}\label{implications}
 
 The result extends machine-checked verification for smart-contract
 security beyond the pattern-recognition layer at which auditors operate
@@ -1220,7 +1238,7 @@ for the observed PASS is genuine portability of the guard pattern's
 correctness across structurally-divergent lending-family architectures,
 within the scope qualified at §9.4.
 
-\subsection{§7.2 Future work}\label{future-work}
+\subsection{Future work}\label{future-work}
 
 The methodology is candidate for application to other reentrancy
 variants --- read-only reentrancy at protocols whose view functions feed
@@ -1239,7 +1257,7 @@ a final natural extension.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\section{§8 Related Work}\label{related-work}
+\section{Related Work}\label{related-work}
 
 This section positions the discriminating-power result against four
 bodies of prior literature: prior formal verification of smart contracts
@@ -1250,7 +1268,7 @@ breadth across the four categories, with sharp positioning of the
 present contribution against what the surveyed work has and has not
 previously demonstrated.
 
-\subsection{§8.1 Prior formal verification of smart
+\subsection{Prior formal verification of smart
 contracts}\label{prior-formal-verification-of-smart-contracts}
 
 Three broad classes of prior work have addressed smart contract
@@ -1299,7 +1317,7 @@ recognition at the deployment layer; demonstration of foundational
 correctness against multiple production protocols with no-retrofit
 composition discipline has remained an open challenge.
 
-\subsection{§8.2 Prior reentrancy-specific
+\subsection{Prior reentrancy-specific
 work}\label{prior-reentrancy-specific-work}
 
 Reentrancy has received targeted attention across runtime, static, and
@@ -1324,7 +1342,7 @@ returning stale state); it is acknowledged here as future-work scope
 OpenZeppelin guard pattern at production protocol scale has not been
 previously demonstrated.
 
-\subsection{§8.3 Related composition discipline
+\subsection{Related composition discipline
 work}\label{related-composition-discipline-work}
 
 Compositional formal verification has been extensively developed in
@@ -1341,7 +1359,7 @@ of guard-pattern correctness at production scale, under a discipline
 that forbids retrofit of underlying lemmas (the no-retrofit composition
 discipline of §4.2), has not been previously demonstrated.
 
-\subsection{§8.4 AI-assisted formal verification
+\subsection{AI-assisted formal verification
 context}\label{ai-assisted-formal-verification-context}
 
 Recent AI-assisted formal verification explores LLMs in two roles:
@@ -1357,13 +1375,13 @@ convergence/divergence analysis across multiple independent reasoning
 models is novel methodology, subject of the companion methodology paper
 rather than a claimed contribution here.
 
-\section{§9 Limitations}\label{limitations}
+\section{Limitations}\label{limitations}
 
 This section adds limitations within the discriminating-power claim's
 domain that constrain its scope; out-of-scope attack classes are
 enumerated at §3.4.
 
-\subsection{§9.1 Single attack class and single defense
+\subsection{Single attack class and single defense
 pattern}\label{single-attack-class-and-single-defense-pattern}
 
 The single-attack-class focus is a principled choice: reentrancy is the
@@ -1378,7 +1396,7 @@ axiom-record-minimal wrapper composition (§4.2, §4.3) are applicable to
 other patterns by construction, but empirical validation across multiple
 defense patterns at production scale is future work (§7.2).
 
-\subsection{§9.2 Constructed mutant boundary
+\subsection{Constructed mutant boundary
 case}\label{constructed-mutant-boundary-case}
 
 The Layer 6-C boundary case includes one constructed variant ---
@@ -1392,7 +1410,7 @@ historical near-miss instances (Curve gauges 2022 read-only-reentrancy
 class, Lendf.Me 2020 ERC-777 callback class, and similar) is
 acknowledged future work.
 
-\subsection{§9.3 Source-level abstraction and trust
+\subsection{Source-level abstraction and trust
 assumptions}\label{source-level-abstraction-and-trust-assumptions}
 
 Operating at Solidity source level (per §3.2) rather than raw EVM
@@ -1410,7 +1428,7 @@ protocol-internal accounting is assumed to execute as written. Expansion
 to attacker-controlled-protocol threat models is future work. No
 consensus-layer behavioral assumption is made.
 
-\subsection{§9.4 Cross-protocol claim
+\subsection{Cross-protocol claim
 scope}\label{cross-protocol-claim-scope}
 
 The cross-protocol composition rests on three instantiations: DAO 2016
@@ -1426,7 +1444,7 @@ future work (§7.2).
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\section{§10 Conclusion}\label{conclusion}
+\section{Conclusion}\label{conclusion}
 
 We presented a machine-checked, tridirectional discriminating-power
 formal verification of the OpenZeppelin reentrancy guard pattern across
@@ -1460,8 +1478,10 @@ protocol-upgrade verification.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\section{Appendix A: Theorem Statements, Axiom Records, and
-Reproduction}\label{appendix-a-theorem-statements-axiom-records-and-reproduction}
+\appendices
+
+\section{Theorem Statements, Axiom Records, and
+Reproduction}\label{theorem-statements-axiom-records-and-reproduction}
 
 This appendix is the substantive substrate anchor for the
 discriminating-power claim. It absorbs the full-statement and
@@ -1472,8 +1492,7 @@ repository at the tagged commit \texttt{v1.3-layer6-closure}; the
 paraphrases below state what each theorem establishes at the level a
 reviewer needs before consulting the source.
 
-\subsection{Appendix A.1 Theorem
-statements}\label{appendix-a.1-theorem-statements}
+\subsection{Theorem statements}\label{theorem-statements}
 
 The corpus comprises thirteen theorems across four layers, matching the
 §5.2 inventory exactly.
@@ -1517,8 +1536,7 @@ against the §2.4 production instantiations plus the §5.5 mutant. It is
 proven by direct conjunction of the three prior-layer theorems, with no
 modification of any underlying proof during composition.
 
-\subsection{Appendix A.2 Per-theorem axiom
-records}\label{appendix-a.2-per-theorem-axiom-records}
+\subsection{Per-theorem axiom records}\label{per-theorem-axiom-records}
 
 Every theorem is verified against an explicit \texttt{\#print\ axioms}
 expectation, re-checked on every push and gated to fail the build on any
@@ -1534,8 +1552,7 @@ admitted with \texttt{sorry}, \texttt{admit}, or any user-introduced
 \texttt{axiom} declaration. Exact per-theorem records are CI-gated
 (§6.3) and reproducible per Appendix A.3.
 
-\subsection{Appendix A.3 Reproduction
-commands}\label{appendix-a.3-reproduction-commands}
+\subsection{Reproduction commands}\label{reproduction-commands}
 
 The corpus is reproducible end-to-end from the tagged commit:
 
@@ -1570,11 +1587,10 @@ tag \texttt{v1.7-methodology-housekeeping}; a reviewer evaluating the
 methodology framework rather than the proof substrate should check out
 that tag.
 
-\section{Appendix B: Methodology Framework
-Pointer}\label{appendix-b-methodology-framework-pointer}
+\section{Methodology Framework
+Pointer}\label{methodology-framework-pointer}
 
-\subsection{Appendix B.1 Scope of this
-pointer}\label{appendix-b.1-scope-of-this-pointer}
+\subsection{Scope of this pointer}\label{scope-of-this-pointer}
 
 Per the boundary discipline of §1, the methodology framework
 underpinning this work --- the no-retrofit composition discipline of
@@ -1597,8 +1613,7 @@ discipline's operational consequence (§4.2) are stated and verifiable
 here. The companion framework adds generalization beyond the present
 scope and is not load-bearing for this paper's substantive claims.
 
-\subsection{Appendix B.2 Canonical
-artifacts}\label{appendix-b.2-canonical-artifacts}
+\subsection{Canonical artifacts}\label{canonical-artifacts}
 
 The methodology framework's canonical artifacts --- the wrapper-layer
 absorption pattern (axiom-record-minimal composition; §4.3), the
@@ -1610,21 +1625,37 @@ history, sub-pattern catalog, four-outcome audit-findings triage
 framework, and the cross-protocol empirical history of the framework's
 application appear there.
 
-\section{Appendix C: Comparison against industrial FV
-frameworks}\label{appendix-c-comparison-against-industrial-fv-frameworks}
+\section{Comparison against industrial FV
+frameworks}\label{comparison-against-industrial-fv-frameworks}
 
 For reviewer at-a-glance positioning, the following table compares the
 present work against the principal industrial / academic formal
 verification systems for smart contracts and adjacent verification work
 (§8.1).
 
-{\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
   >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
   >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
   >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
   >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}@{}}
+\caption{Positioning against principal industrial / academic formal
+verification systems for smart contracts and adjacent verification
+work.}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+System
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Verification target
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Composition support
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Axiom footprint
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Production deployment
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 System
@@ -1661,11 +1692,8 @@ Platform-semantics layer; no per-contract composition claim &
 K-framework trust & Foundational artifact; deployed via consumer
 tools \\
 \end{longtable}
-}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
-
-\section{References}\label{references}
 
 \begin{thebibliography}{13}
 \bibitem{Bhargavan2016}
