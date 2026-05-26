@@ -390,8 +390,8 @@ The corpus is reproducible end-to-end from the tagged commit:
 git clone https://github.com/rayiskander2406/qanary-contracts.git
 cd qanary-contracts
 git checkout v1.3-layer6-closure
-lake build # 901 jobs green
-lake env lean QanaryContracts/PrintAxioms.lean # verifies every theorem's axiom record
+lake build                              # 901 jobs green
+lake env lean QanaryContracts/PrintAxioms.lean  # verifies every theorem's axiom record
 ```
 
 The dependency graph is pinned and locked:
