@@ -24,8 +24,8 @@ From a fresh clone, regenerate this package against the manuscript at
 
 ```
 cd paper/arxiv_v1_package
-sed -n '12,18p' ../qanary_contracts_manuscript.md > _abstract.md
-sed -n '22,$p' ../qanary_contracts_manuscript.md > _body.md
+sed -n '11,17p' ../qanary_contracts_manuscript.md > _abstract.md
+sed -n '21,$p'  ../qanary_contracts_manuscript.md > _body.md
 pandoc _abstract.md -f markdown -t latex -o _abstract.tex
 pandoc _body.md -f markdown -t latex --shift-heading-level-by=-1 -o _body.tex
 perl _fix_longtable.pl < _body.tex > _body_fixed.tex
@@ -33,8 +33,9 @@ tectonic -X compile qanary_contracts_arxiv_v1.tex --keep-logs
 pdfinfo qanary_contracts_arxiv_v1.pdf | grep Pages
 ```
 
-Line ranges valid at HEAD (internal commit); re-derive if the manuscript
-front-matter / abstract / §1 boundaries move.
+Line ranges valid at HEAD (internal commit; re-derived at Session 61.9.8 after
+the sole-authorship front-matter edit shifted boundaries up by one line);
+re-derive if the manuscript front-matter / abstract / §1 boundaries move again.
 
 ## Pre-submission readiness verification (Phase 2.4)
 
@@ -42,11 +43,11 @@ front-matter / abstract / §1 boundaries move.
 |---|---|
 | LaTeX source compiles cleanly | PASS (tectonic; warnings only — see below) |
 | PDF generated at submission grade | PASS (16 pages; `qanary_contracts_arxiv_v1.pdf`) |
-| Author block populated correctly | PASS (`Ray Iskander` + `` + Verdict Security + via `\IEEEauthorrefmark` per IEEEtran-compsoc convention; not placeholder) |
+| Author block populated correctly | PASS (`Ray Iskander`, sole author; Verdict Security, Independent Formal Verification Firm + e-mail via `\IEEEcompsocthanksitem`; not placeholder. Sole-author state per Session 61.9.8) |
 | Repository pointer accessible | PENDING (`https://github.com/rayiskander2406/qanary-contracts`; verify public visibility at Session 62 pre-submission) |
 | Supplementary material organized | PASS (`supplementary_material.md`) |
 | arXiv metadata draft complete | PASS (`arxiv_metadata_draft.md`) |
-| ORCID readiness | PENDING (Ray to enter at submission portal; ORCID registration verified at Session 62 pre-submission) |
+| ORCID readiness | PENDING (Ray to enter at submission portal at Session 62 pre-submission) |
 | GenAI disclosure compliance | PASS (§4.5 wording verified compliant at Phase 1.1; names Claude, Grok, Gemini; describes roles; confirms author inspection + Lean 4 kernel verification + CI reproducibility) |
 | Body page count Decision 22 compliant | PASS (~12.85pp body; under 13.0pp ceiling per Phase 1.4 actual IEEEtran-compsoc compile measurement) |
 

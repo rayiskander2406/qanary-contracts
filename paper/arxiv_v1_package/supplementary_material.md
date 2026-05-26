@@ -30,8 +30,8 @@ Source* (Ray Iskander).
 ```
 git clone https://github.com/rayiskander2406/qanary-contracts.git
 cd qanary-contracts
-git checkout v1.3-layer6-closure # substantive substrate
-lake build # type-checks the corpus at 901 jobs
+git checkout v1.3-layer6-closure   # substantive substrate
+lake build                          # type-checks the corpus at 901 jobs
 lake env lean QanaryContracts/PrintAxioms.lean
                                     # emits per-theorem axiom records
 ```

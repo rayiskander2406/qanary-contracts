@@ -3,7 +3,7 @@
 Draft of the arXiv submission portal metadata fields for the Phase 8 Session 62
 arXiv v1 submission execution. Treat this document as the canonical reference
 for the metadata to enter into arxiv.org's submission form; revise inline at
-Session 62 if any field needs final adjustment after Ray review.
+Session 62 if any field needs final adjustment after final review.
 
 ## §1 Core bibliographic fields
 
@@ -12,7 +12,7 @@ Session 62 if any field needs final adjustment after Ray review.
 | **Title** | Tridirectional Discriminating-Power Formal Verification of Smart Contract Reentrancy Defense Against Production-Deployed Solidity Source |
 | **Authors** | Ray Iskander |
 | **Affiliations** (entered per-author) | Ray Iskander — Verdict Security, Independent Formal Verification Firm. |
-| **ORCID identifiers** (entered per-author in submission portal; not in manuscript body under non-anonymous arXiv v1 framing) | Ray Iskander — ORCID `[Ray to enter]`. — ORCID `[ to enter]`. |
+| **ORCID identifiers** (entered per-author in submission portal; not in manuscript body under non-anonymous arXiv v1 framing) | Ray Iskander — ORCID `[Ray to enter]`. |
 | **Submission category** | Preprint v1 (community-feedback solicitation; venue-submission preparation underway) |
 
 ## §2 Abstract (verbatim from manuscript)
@@ -96,7 +96,6 @@ source.
 | Item | Resolution path |
 |---|---|
 | Ray ORCID value | Ray to enter at submission portal at Session 62. |
-| ORCID value | to confirm + provide at Session 62; if absent, register at https://orcid.org before submission. |
 | Repository public visibility | If `https://github.com/rayiskander2406/qanary-contracts` is currently private, make public concurrent with arXiv submission. |
-| arXiv author endorsement | First-time arXiv submitters may need endorsement; verify Ray have prior arXiv submissions or established author endorsement. |
+| arXiv author endorsement | First-time arXiv submitters may need endorsement; verify Ray has prior arXiv submissions or established author endorsement. |
 | Final manuscript review | Pre-submission read-through by Ray to catch last-minute issues before Session 62 submission execution. |
