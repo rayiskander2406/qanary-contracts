@@ -385,11 +385,11 @@ approximately 11.5M ETH (≈US\$150M at the time) through token sales and
 aimed to operate as an investor-directed venture fund. In June 2016, an
 attacker exploited a classical single-function reentrancy vulnerability
 in the DAO's \texttt{splitDAO} function to drain approximately 3.6M ETH
-(≈US\$60M at attack-time price; ≈US\$10B+ at late-2025 ETH prices). The
-Ethereum community responded with a hard fork that reverted the attack's
-effects, splitting the chain into Ethereum (with the hard fork) and
-Ethereum Classic (without). The DAO attack is the canonical reentrancy
-incident; reproducing its core mechanism is the natural
+(≈US\$60M at attack-time price; substantially higher at current ETH
+prices). The Ethereum community responded with a hard fork that reverted
+the attack's effects, splitting the chain into Ethereum (with the hard
+fork) and Ethereum Classic (without). The DAO attack is the canonical
+reentrancy incident; reproducing its core mechanism is the natural
 negative-instance test of any guard-pattern verification methodology.
 
 \emph{Compound v2 cToken family (positive instance).} Compound v2 is one
@@ -811,7 +811,11 @@ at \texttt{v1.3-layer6-closure}, the methodology framework canonization
 at \texttt{v1.7-methodology-housekeeping}. Reviewers reproduce the
 verification by checking out either tag and running \texttt{lake\ build}
 plus \texttt{lake\ env\ lean\ QanaryContracts/PrintAxioms.lean} against
-the pinned dependency graph.
+the pinned dependency graph. The manuscript content corresponding to
+this paper version is sealed at intermediate tag
+\texttt{v1.6-phase7-closure} (the abstract's reproducibility anchor);
+the substrate at v1.6 is identical to v1.3, so reviewers may
+equivalently check out v1.6 for end-to-end reproduction.
 
 \subsection{Manuscript audit and
 transparency}\label{manuscript-audit-and-transparency}
@@ -1102,8 +1106,14 @@ foreclosing the co-development confound.
 The capstone's axiom record is \texttt{{[}propext{]}}-only and equals
 the union of the three prior-layer records (§4.3 wrapper preserves
 axiom-record minimality); no choice, no excluded middle, no
-user-introduced \texttt{axiom} declarations anywhere in the corpus. The
-capstone's Lean 4 statement and proof term illustrate the
+user-introduced \texttt{axiom} declarations anywhere in the corpus. In
+the Lean formalization, the safe contract instance carrying production
+\texttt{flashLoan} is named \texttt{aaveContract}, and the
+structurally-adjacent vulnerable contract carrying
+\texttt{flashLoanVulnerable} is named \texttt{aaveContractAdjacent}; the
+paper-body \texttt{flashLoan} vs \texttt{flashLoanVulnerable}
+distinction is the function-level view of the contract-level objects
+below. The capstone's Lean 4 statement and proof term illustrate the
 direct-conjunction wrapper composition concretely:
 
 \begin{Shaded}
@@ -1248,10 +1258,10 @@ OpenZeppelin defense patterns (\texttt{AccessControl},
 \texttt{Pausable}, \texttt{ReentrancyGuardUpgradeable}, upgradeable
 proxy pathways), each carrying its own correctness predicate amenable to
 the same tridirectional treatment. Beyond reentrancy and OpenZeppelin,
-the methodology framework canonical artifacts (companion paper, per
-Decision 18) enable application to formal verification more broadly,
-including non-smart-contract targets where the no-retrofit composition
-discipline addresses the same proof-brittleness pain point.
+the methodology framework canonical artifacts (the subject of the
+companion methodology paper) enable application to formal verification
+more broadly, including non-smart-contract targets where the no-retrofit
+composition discipline addresses the same proof-brittleness pain point.
 Continuous-integration-driven verification at protocol upgrade events is
 a final natural extension.
 
@@ -1287,22 +1297,22 @@ are precisely where their precision degrades (per §1.2).
 
 Theorem-prover-based and specification-driven verification has
 demonstrated foundational rigor on narrower targets. Bhargavan et
-al.~formalized EVM operational semantics in F* and Coq (POST 2016 and
-subsequent); Hildenbrandt et al.'s KEVM (CSF 2018) provided a complete
-executable EVM semantics in the K framework; Grishchenko, Maffei, and
-Schneidewind (POST 2018) developed an F*-based semantic framework for
-EVM security analysis; Hirai's Lem formalization addressed EVM bytecode
-semantics for proof assistant integration. Subsequent Coq-based work has
-formalized individual contracts or contract subsets. Certora's Prover
-applies SMT-based discharge against specifications expressed in CVL,
-deployed in production audit workflows; its strength is scale and
-tool-driven specification discharge rather than foundational
-machine-checked correctness in the proof-assistant sense. These
-contributions are foundational at the platform-semantics or
-specification-discharge layer; cross-protocol composition of
-guard-pattern correctness against multiple production protocol
-instantiations has not been previously demonstrated in this line of
-work.
+al.~{[}1{]} formalized EVM operational semantics in F* and Coq (POST
+2016 and subsequent); Hildenbrandt et al.'s KEVM {[}2{]} (CSF 2018)
+provided a complete executable EVM semantics in the K framework;
+Grishchenko, Maffei, and Schneidewind {[}3{]} (POST 2018) developed an
+F*-based semantic framework for EVM security analysis; Hirai's Lem
+formalization {[}4{]} addressed EVM bytecode semantics for proof
+assistant integration. Subsequent Coq-based work has formalized
+individual contracts or contract subsets. Certora's Prover applies
+SMT-based discharge against specifications expressed in CVL, deployed in
+production audit workflows; its strength is scale and tool-driven
+specification discharge rather than foundational machine-checked
+correctness in the proof-assistant sense. These contributions are
+foundational at the platform-semantics or specification-discharge layer;
+cross-protocol composition of guard-pattern correctness against multiple
+production protocol instantiations has not been previously demonstrated
+in this line of work.
 
 Property-based testing tools --- Foundry fuzz testing and Echidna ---
 have driven substantial bug discovery at deployment scale. Their
