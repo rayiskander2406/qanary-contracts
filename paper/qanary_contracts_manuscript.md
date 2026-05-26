@@ -2,7 +2,7 @@
 
 **Ray Iskander**
 
-Verdict Security, Independent Formal Verification Firm
+Verdict Security, Independent Formal Verification Firm. E-mail: ray@verdictsecurity.com
 
 ---
 
