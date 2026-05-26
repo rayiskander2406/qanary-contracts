@@ -722,7 +722,7 @@ adjust hypotheses, conclusions, or supporting lemmas.
 
 The discipline is enforced procedurally rather than by a single
 language-level mechanism. The three protocol-instantiation files ---
-\texttt{DAOAttack.lean}, \texttt{CompoundReentrancy.lean},
+\texttt{DAOContract.lean}, \texttt{CompoundContract.lean},
 \texttt{AaveBoundaryCase.lean} --- were authored, proven, and sealed
 prior to any work on the capstone meta-theorem. Once a file was sealed,
 modifications to that file were prohibited under the methodology
@@ -1058,8 +1058,8 @@ naturally-occurring near-misses combine multiple structural differences
 with confounding context, the minimal-diff mutant isolates the precise
 security-critical structural difference. A single hand-constructed
 minimal-diff mutant is a principled choice over an operator-derived
-corpus {[}10{]} --- a security-critical semantic regression test
-specifically optimized for formal specification boundary detection,
+corpus {[}9{]}, {[}10{]} --- a security-critical semantic regression
+test specifically optimized for formal specification boundary detection,
 distinct from the random syntactic perturbations automated mutation
 operators typically produce against production DeFi code.
 
@@ -1204,8 +1204,12 @@ artifact; the directive + closure-report discipline is documented in the
 companion methodology paper. The corpus is reproducible end-to-end from
 a tagged commit: the substantive substrate is sealed at
 \texttt{v1.3-layer6-closure}; the methodology framework canonization is
-sealed at \texttt{v1.7-methodology-housekeeping}. Full reproduction
-commands and the pinned dependency graph appear in Appendix A.
+sealed at \texttt{v1.7-methodology-housekeeping}. The manuscript content
+corresponding to this paper version is sealed at intermediate tag
+\texttt{v1.6-phase7-closure} (the abstract's reproducibility anchor);
+see §4.4 for the relationship between these three tags. Full
+reproduction commands and the pinned dependency graph appear in Appendix
+A.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
