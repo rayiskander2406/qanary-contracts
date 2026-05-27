@@ -47,10 +47,10 @@ modification during composition.
 ```bash
 git clone https://github.com/rayiskander2406/qanary-contracts.git
 cd qanary-contracts
-git checkout v1.6-phase7-closure # post-audit content seal (see Tags)
+git checkout v1.6-phase7-closure          # post-audit content seal (see Tags)
 elan toolchain install "$(cat lean-toolchain)"
-lake build # ~901 jobs; first build ~10–15 min (mathlib4)
-lake env lean QanaryContracts/PrintAxioms.lean # prints each theorem's axiom record
+lake build                                # ~901 jobs; first build ~10–15 min (mathlib4)
+lake env lean QanaryContracts/PrintAxioms.lean   # prints each theorem's axiom record
 ```
 
 The corpus is reproducible end-to-end from a single tagged commit. The
@@ -61,9 +61,9 @@ substantive proof substrate is independently reproducible at
 
 ```bash
 # zero sorry / admit
-grep -rnE "^\s*(sorry|admit)\b" QanaryContracts/ --include="*.lean" # (no output)
+grep -rnE "^\s*(sorry|admit)\b" QanaryContracts/ --include="*.lean"   # (no output)
 # zero user-introduced axiom declarations
-grep -rn "^axiom " QanaryContracts/ --include="*.lean" # (no output)
+grep -rn "^axiom " QanaryContracts/ --include="*.lean"                # (no output)
 ```
 
 ## Tags
@@ -79,11 +79,11 @@ grep -rn "^axiom " QanaryContracts/ --include="*.lean" # (no output)
 ## Repository structure
 
 ```
-QanaryContracts/ Lean 4 source (flat module set; files map to layers below)
-methodology/ Methodology-framework canonical artifacts (companion-paper pointers)
-paper/ Manuscript source + arXiv v1 package + measurement scaffold
-.github/workflows/ CI: four parallel verification blocks + axiom-record gating
-lakefile.lean, lake-manifest.json, lean-toolchain Lean/mathlib4 pins
+QanaryContracts/        Lean 4 source (flat module set; files map to layers below)
+methodology/            Methodology-framework canonical artifacts (companion-paper pointers)
+paper/                  Manuscript source + arXiv v1 package + measurement scaffold
+.github/workflows/      CI: four parallel verification blocks + axiom-record gating
+lakefile.lean, lake-manifest.json, lean-toolchain   Lean/mathlib4 pins
 ```
 
 ### `QanaryContracts/` — layer mapping
@@ -134,12 +134,12 @@ The paper is forthcoming on arXiv. Until then, cite the repository:
 
 ```bibtex
 @misc{qanary-contracts-2026,
-  author = {Iskander, Ray},
-  title = {{QANARY} Contracts: Tridirectional Discriminating-Power Formal
+  author       = {Iskander, Ray},
+  title        = {{QANARY} Contracts: Tridirectional Discriminating-Power Formal
                   Verification of Smart Contract Reentrancy Defense Against
                   Production-Deployed Solidity Source},
-  year = {2026},
+  year         = {2026},
   howpublished = {\url{https://github.com/rayiskander2406/qanary-contracts}},
-  note = {Reproducibility anchor: tag \texttt{v1.6-phase7-closure}}
+  note         = {Reproducibility anchor: tag \texttt{v1.6-phase7-closure}}
 }
 ```
