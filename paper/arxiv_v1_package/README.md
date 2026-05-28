@@ -58,7 +58,7 @@ submission; arXiv recompiles from source and emits its own typography
 report):
 
 - Two underfull/overfull `hbox` warnings on long `verbatim` lines in
-  §10.3.3 reproduction commands — cosmetic, not content-affecting.
+  the Appendix A.3 reproduction commands — cosmetic, not content-affecting.
 - Underfull `vbox` warning during page-break adjustment — IEEEtran-compsoc
   two-column behavior at table breaks; cosmetic.
 

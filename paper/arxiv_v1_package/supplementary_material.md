@@ -16,16 +16,17 @@ Source* (Ray Iskander).
   machine-checked theorems across Layer 6-A/B/C/D); the manuscript's
   reproducibility tag for the proof artifact.
 - `v1.4-methodology-housekeeping` — methodology framework canonization
-  (canonical artifacts at `/methodology/`); referenced at §10.4.
-- `v1.5-phase6-closure` — Phase 6 manuscript closure baseline (referenced
-  at the abstract).
+  (canonical artifacts at `/methodology/`); the pre-Phase-7 baseline,
+  superseded by `v1.7-methodology-housekeeping`.
+- `v1.5-phase6-closure` — Phase 6 manuscript closure baseline; superseded
+  as the abstract's reproducibility anchor by `v1.6-phase7-closure`.
 - `v1.6-phase7-closure` — Phase 7 extreme-audit pass closure (post-Sessions
   53–60 audit-driven manuscript revisions).
 - `v1.7-methodology-housekeeping` — post-Phase-7 methodology framework
   housekeeping cycle (5 graduations → 8 canonical artifacts at
   `/methodology/`).
 
-**Reviewer reproduction path** (verbatim from manuscript §10.3.3):
+**Reviewer reproduction path** (verbatim from manuscript Appendix A.3):
 
 ```
 git clone https://github.com/rayiskander2406/qanary-contracts.git
@@ -38,7 +39,7 @@ lake env lean QanaryContracts/PrintAxioms.lean
 
 Reviewers evaluating the methodology framework should additionally check out
 `v1.4-methodology-housekeeping` (or `v1.7-methodology-housekeeping` for the
-post-Phase-7-graduated state) per §10.4.
+post-Phase-7-graduated state) per Appendix B.
 
 ## §2 CI verification status
 
@@ -62,7 +63,7 @@ The repository is organized at three top-level locations:
 - `QanaryContracts/` — Lean 4 source organized by Layer 6-A / 6-B / 6-C / 6-D
   with supporting modules.
 - `methodology/` — canonical methodology framework artifacts (referenced
-  at §10.4; full presentation in the companion methodology paper).
+  at Appendix B; full presentation in the companion methodology paper).
 
 The continuous-integration configuration sits at `build.yml`.
 
@@ -74,7 +75,7 @@ The internal artifacts produced during the audit process are not included in
 this public artifact repository.
 
 The canonical methodology framework artifacts the manuscript cites directly at
-§10.4 are included here, at `methodology/*.md`.
+Appendix B are included here, at `methodology/*.md`.
 
 ## §5 Operational note for Session 62 submission execution
 
