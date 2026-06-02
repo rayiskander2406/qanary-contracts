@@ -50,7 +50,9 @@ attached GitHub release.
 
 ## Audit (v2 preview PDF vs. v1 baseline)
 
-- Sole-author scans (khaled / kirah / ain shams / asu.edu / corresponding author): 0.
+- Sole-author scans: 0 hits for all five negative tokens (the two prior
+  co-author name forms, the two prior-affiliation strings, and the
+  "corresponding author" marker) in both the manuscript and the v2 preview PDF.
 - Zenodo concept DOI `20510920` present (Appendix A.3, p.14).
 - Cascade counts identical to v1 (v1.6-phase7=3, v1.3-layer6=4, appendix a=19, sorry=7).
 - Affiliation preserved (verdict security; ray@verdictsecurity).
