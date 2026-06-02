@@ -14,8 +14,10 @@
 \usepackage{url}
 \usepackage{fancyvrb}
 \usepackage{xcolor}
+\usepackage{fvextra}
 \newenvironment{Shaded}{\par\footnotesize}{\par}
 \DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+\DefineVerbatimEnvironment{verbatim}{Verbatim}{breaklines=true,breakanywhere=false,breakafter=/,breaksymbolleft=\textcolor{gray}{\ensuremath{\hookrightarrow}\space}}
 \providecommand{\KeywordTok}[1]{\textbf{#1}}
 \providecommand{\NormalTok}[1]{#1}
 \providecommand{\OperatorTok}[1]{#1}
@@ -47,6 +49,7 @@
 \newunicodechar{–}{--}
 \newunicodechar{—}{---}
 \newunicodechar{∧}{\ensuremath{\wedge}}
+\newunicodechar{¬}{\ensuremath{\neg}}
 \newunicodechar{⟨}{\ensuremath{\langle}}
 \newunicodechar{⟩}{\ensuremath{\rangle}}
 \title{Tridirectional Discriminating-Power Formal Verification of Smart
