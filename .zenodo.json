@@ -1,0 +1,35 @@
+{
+  "title": "Artifact: Tridirectional Discriminating-Power Formal Verification of Smart Contract Reentrancy Defense Against Production-Deployed Solidity Source (arXiv:2606.01794)",
+  "description": "Machine-checked Lean 4 + mathlib4 proof suite establishing the discriminating power of the OpenZeppelin ReentrancyGuard pattern against state-machine models of production-deployed Solidity source. The corpus proves the guard blocks attacks against vulnerable instances (negative leg, DAO 2016), preserves correct execution for non-attacking transactions (positive leg, Compound v2 cToken), and distinguishes structurally-adjacent safe and vulnerable variants (boundary leg, Aave V3 flashLoan vs. a minimal-diff flashLoanVulnerable mutant). A single capstone meta-theorem composes the three protocol instantiations under a no-retrofit composition discipline. All thirteen theorems are kernel-verified with zero sorry, zero user-introduced axioms, and an axiom footprint bounded by [propext], gated under CI across four parallel verification blocks. Companion to arXiv:2606.01794.",
+  "creators": [
+    {
+      "name": "Iskander, Ray",
+      "orcid": "0009-0008-7971-4992",
+      "affiliation": "Verdict Security"
+    }
+  ],
+  "license": "MIT",
+  "upload_type": "software",
+  "access_right": "open",
+  "keywords": [
+    "formal verification",
+    "Lean 4",
+    "Mathlib",
+    "smart contract security",
+    "reentrancy",
+    "OpenZeppelin ReentrancyGuard",
+    "checks-effects-interactions",
+    "Solidity",
+    "Ethereum Virtual Machine",
+    "DeFi",
+    "mutation testing",
+    "compositional verification"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "2606.01794",
+      "relation": "isSupplementTo",
+      "scheme": "arxiv"
+    }
+  ]
+}

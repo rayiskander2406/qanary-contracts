@@ -1,0 +1,48 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the paper below."
+title: "Artifact: Tridirectional Discriminating-Power Formal Verification of Smart Contract Reentrancy Defense Against Production-Deployed Solidity Source"
+type: software
+authors:
+  - family-names: Iskander
+    given-names: Ray
+    orcid: "https://orcid.org/0009-0008-7971-4992"
+    affiliation: "Verdict Security"
+version: v2.1-arxiv-v2
+date-released: "2026-06-02"
+license: MIT
+doi: "10.5281/zenodo.20510920"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.20510920"
+    description: "Zenodo concept DOI (resolves to the latest archived version)"
+  - type: doi
+    value: "10.5281/zenodo.20510921"
+    description: "Zenodo version DOI (v2.0-arxiv-v1 snapshot)"
+repository-code: "https://github.com/rayiskander2406/qanary-contracts"
+url: "https://doi.org/10.5281/zenodo.20510920"
+keywords:
+  - formal verification
+  - Lean 4
+  - Mathlib
+  - smart contract security
+  - reentrancy
+  - OpenZeppelin ReentrancyGuard
+  - checks-effects-interactions
+  - Solidity
+  - Ethereum Virtual Machine
+  - DeFi
+  - mutation testing
+  - compositional verification
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Iskander
+      given-names: Ray
+      orcid: "https://orcid.org/0009-0008-7971-4992"
+      affiliation: "Verdict Security"
+  title: "Tridirectional Discriminating-Power Formal Verification of Smart Contract Reentrancy Defense Against Production-Deployed Solidity Source"
+  year: 2026
+  identifiers:
+    - type: other
+      value: "arXiv:2606.01794"
+      description: "arXiv preprint"

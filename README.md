@@ -4,6 +4,10 @@
 
 Ray Iskander (Verdict Security)
 
+[![arXiv](https://img.shields.io/badge/arXiv-2606.01794-b31b1b.svg)](https://arxiv.org/abs/2606.01794)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20510920.svg)](https://doi.org/10.5281/zenodo.20510920)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A Lean 4 + mathlib4 formalization that machine-checks the correctness of the
 OpenZeppelin reentrancy-guard pattern against a state-machine model of
 **production-deployed Solidity source** — the DAO (2016), Compound v2 cToken,
@@ -73,6 +77,8 @@ grep -rn "^axiom " QanaryContracts/ --include="*.lean"                # (no outp
 | `v1.3-layer6-closure` | Substantive proof substrate sealed (all four protocol layers + capstone). |
 | `v1.6-phase7-closure` | Post-audit content seal — the reproducibility anchor cited by the paper. |
 | `v1.7-methodology-housekeeping` | Methodology-framework canonical artifacts canonized. |
+| `v2.0-arxiv-v1` | arXiv v1 reproducibility anchor (Zenodo version DOI `10.5281/zenodo.20510921`). |
+| `v2.1-arxiv-v2` | arXiv v2 reproducibility anchor (Zenodo concept DOI `10.5281/zenodo.20510920`). |
 
 (Earlier tags `v1.0-soundness` … `v1.2-layer6c-closure` mark intermediate milestones.)
 
@@ -116,7 +122,9 @@ pointer-table targets referenced from the manuscript's Appendix B. See
 
 ## Paper
 
-The manuscript source and the arXiv v1 submission package are under `paper/`:
+The paper is published on arXiv: **[arXiv:2606.01794](https://arxiv.org/abs/2606.01794)**
+(cs.CR; cross-listed cs.LO, cs.PL). The manuscript source and the arXiv submission
+package are under `paper/`:
 
 - `paper/qanary_contracts_manuscript.md` — manuscript source.
 - `paper/arxiv_v1_package/` — LaTeX source + compiled PDF + supplementary material (the arXiv-hosted PDF is the manuscript of record).
@@ -130,16 +138,24 @@ See `paper/README.md`.
 
 ## Citation
 
-The paper is forthcoming on arXiv. Until then, cite the repository:
+Cite the arXiv paper:
 
 ```bibtex
-@misc{qanary-contracts-2026,
-  author       = {Iskander, Ray},
-  title        = {{QANARY} Contracts: Tridirectional Discriminating-Power Formal
-                  Verification of Smart Contract Reentrancy Defense Against
-                  Production-Deployed Solidity Source},
-  year         = {2026},
-  howpublished = {\url{https://github.com/rayiskander2406/qanary-contracts}},
-  note         = {Reproducibility anchor: tag \texttt{v1.6-phase7-closure}}
+@article{qanary-contracts-2026,
+  author  = {Iskander, Ray},
+  title   = {{Tridirectional Discriminating-Power Formal Verification of Smart
+             Contract Reentrancy Defense Against Production-Deployed Solidity
+             Source}},
+  year    = {2026},
+  journal = {arXiv preprint},
+  note    = {arXiv:2606.01794}
 }
 ```
+
+For a fixed, citable software artifact, use the Zenodo **concept DOI** (always
+resolves to the latest archived version):
+
+- Concept DOI: [`10.5281/zenodo.20510920`](https://doi.org/10.5281/zenodo.20510920)
+
+The reproducibility anchor for the proof corpus remains tag `v1.6-phase7-closure`
+(see [Tags](#tags)).
