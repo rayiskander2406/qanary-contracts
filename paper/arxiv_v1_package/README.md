@@ -44,10 +44,10 @@ re-derive if the manuscript front-matter / abstract / §1 boundaries move again.
 | LaTeX source compiles cleanly | PASS (tectonic; warnings only — see below) |
 | PDF generated at submission grade | PASS (16 pages; `qanary_contracts_arxiv_v1.pdf`) |
 | Author block populated correctly | PASS (`Ray Iskander`, sole author; Verdict Security, Independent Formal Verification Firm + e-mail via `\IEEEcompsocthanksitem`; not placeholder. Sole-author state per Session 61.9.8) |
-| Repository pointer accessible | PENDING (`https://github.com/rayiskander2406/qanary-contracts`; verify public visibility at Session 62 pre-submission) |
+| Repository pointer accessible | PASS (`https://github.com/rayiskander2406/qanary-contracts`; repository PUBLIC, verified at Session 62 — `main` pushed and fresh-clone reproduces; arXiv submission live at arXiv:2606.01794) |
 | Supplementary material organized | PASS (`supplementary_material.md`) |
 | arXiv metadata draft complete | PASS (`arxiv_metadata_draft.md`) |
-| ORCID readiness | PENDING (Ray to enter at submission portal at Session 62 pre-submission) |
+| ORCID readiness | RESOLVED at Session 62 submission (PI-managed optional arXiv portal field; pre-submission gate closed — submission completed. ORCID value not independently re-verified here) |
 | GenAI disclosure compliance | PASS (§4.5 wording verified compliant at Phase 1.1; names Claude, Grok, Gemini; describes roles; confirms author inspection + Lean 4 kernel verification + CI reproducibility) |
 | Body page count Decision 22 compliant | PASS (~12.85pp body; under 13.0pp ceiling per Phase 1.4 actual IEEEtran-compsoc compile measurement) |
 
